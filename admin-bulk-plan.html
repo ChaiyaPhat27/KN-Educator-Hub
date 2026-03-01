@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลงตารางสอนแบบกลุ่ม - KN Educator Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --primary: #1f8ffd; --primary-dark: #0b5fa6; --primary-light: #e8f4fd;
+            --admin: #8e44ad; --admin-dark: #732d91; --admin-light: #f4e8f9;
+            --bg-gray: #f3f4f6; --surface: #ffffff;
+            --text-dark: #1f2937; --text-muted: #6b7280;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --border-color: #e5e7eb;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Anuphan', sans-serif; }
+        body { background-color: var(--bg-gray); color: var(--text-dark); display: flex; min-height: 100vh; overflow-x: hidden; }
+        
+        /* Sidebar (Admin Theme) */
+        .sidebar { width: 280px; background-color: var(--surface); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 4px 0 24px rgba(0,0,0,0.02);}
+        .sidebar.collapsed { width: 80px; }
+        .sidebar-header { padding: 30px 15px; text-align: center; border-bottom: 1px solid var(--border-color); background: var(--admin-dark); color: white; position: sticky; top: 0; z-index: 2; transition: background 0.3s;}
+        .sidebar-header h3 { font-size: 1.15rem; margin-top: 15px; font-weight: 700; letter-spacing: 0.5px;}
+        .sidebar.collapsed .sidebar-header h3 { display: none; }
+        .collapse-btn { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+        .sidebar.collapsed .collapse-btn { transform: rotate(180deg); right: 25px; top: 25px;}
+
+        .menu-category { font-size: 0.85rem; font-weight: 800; color: #9ca3af; text-transform: uppercase; padding: 25px 25px 10px 25px; letter-spacing: 1px;}
+        .sidebar.collapsed .menu-category { display: none; }
+        
+        .menu-item { display: flex; align-items: center; padding: 12px 25px; color: var(--text-dark); text-decoration: none; font-size: 1rem; font-weight: 600; transition: 0.2s; white-space: nowrap; overflow: hidden; margin: 5px 15px; border-radius: 12px;}
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item i.main-icon { width: 24px; font-size: 1.2rem; text-align: center; margin-right: 15px; color: #9ca3af; transition: 0.2s;}
+
+        .menu-item.admin-menu:hover { background: var(--admin-light); color: var(--admin); }
+        .menu-item.admin-menu:hover i.main-icon { color: var(--admin); }
+        .menu-item.admin-active { background: var(--admin); color: white; box-shadow: 0 4px 12px rgba(142, 68, 173, 0.3); }
+        .menu-item.admin-active i.main-icon { color: white; }
+        .sidebar.collapsed .menu-item span { display: none; }
+        .sidebar.collapsed .menu-item { justify-content: center; padding: 15px 0; margin: 10px; }
+        .sidebar.collapsed .menu-item i.main-icon { margin-right: 0; font-size: 1.4rem;}
+
+        /* Navbar */
+        .main-wrapper { flex: 1; margin-left: 280px; display: flex; flex-direction: column; width: calc(100% - 280px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .main-wrapper.expanded { margin-left: 80px; width: calc(100% - 80px); }
+        .top-navbar { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 90; }
+        .navbar-left h2 { margin: 0; font-size: 1.2rem; color: var(--text-dark); font-weight: 800; }
+        
+        .nav-user { display: flex; align-items: center; gap: 15px; padding: 5px 15px; background: var(--admin-light); border-radius: 50px;}
+        .nav-user-info { text-align: right; line-height: 1.2; }
+        .nav-user-id { font-size: 0.8rem; color: var(--admin); font-weight: 700;}
+        .nav-user-name { font-size: 1rem; color: var(--text-dark); font-weight: 800; }
+        .nav-user i { font-size: 2rem; color: var(--admin); }
+
+        /* Content Area */
+        .content { padding: 40px; max-width: 1400px; margin: 0 auto; width: 100%; }
+        .card { background: var(--surface); border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border-color); margin-bottom: 30px; overflow: hidden; }
+        .card-header { background: #fdfdfd; padding: 25px 30px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 15px;}
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .card-header i.main { font-size: 2rem; color: var(--warning); }
+        .card-header h2 { font-size: 1.4rem; font-weight: 800; color: var(--text-dark); margin:0;}
+        .term-badge { background: var(--admin-light); color: var(--admin); padding: 8px 20px; border-radius: 30px; font-weight: 800; font-size: 0.95rem;}
+        
+        .card-body { padding: 20px 30px; }
+        
+        /* Bulk Table */
+        .table-responsive { overflow-x: auto; min-height: 400px;}
+        table.bulk-table { width: 100%; border-collapse: collapse; }
+        table.bulk-table th { background: #f9fafb; color: var(--text-muted); font-weight: 800; padding: 15px 10px; text-align: left; font-size: 0.85rem; text-transform: uppercase; border-bottom: 2px solid var(--border-color); white-space: nowrap;}
+        table.bulk-table td { padding: 10px 5px; border-bottom: 1px dashed var(--border-color); vertical-align: top;}
+        
+        .bulk-input { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 0.95rem; font-family: 'Anuphan'; transition: 0.3s; background: #f9fafb;}
+        .bulk-input:focus { border-color: var(--admin); background: white; outline: none; box-shadow: 0 0 0 3px rgba(142,68,173,0.15); }
+        
+        .info-text { display: block; font-size: 0.8rem; color: var(--admin); margin-top: 6px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;}
+        .error-text { color: var(--danger); }
+
+        .btn-add-row { background: #eefaf3; color: var(--success); border: 2px dashed #a3e4be; padding: 15px; width: 100%; border-radius: 12px; font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: 0.3s; margin-top: 15px;}
+        .btn-add-row:hover { background: var(--success); color: white; border-color: var(--success);}
+        
+        .btn-del-row { background: #fee2e2; color: var(--danger); border: none; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 0.9rem;}
+        .btn-del-row:hover { background: var(--danger); color: white; }
+
+        .btn-submit-all { background: var(--admin); color: white; border: none; padding: 18px 30px; border-radius: 16px; font-size: 1.15rem; font-weight: 800; cursor: pointer; transition: 0.3s; width: 100%; margin-top: 25px; box-shadow: 0 4px 15px rgba(142,68,173,0.3);}
+        .btn-submit-all:hover { background: var(--admin-dark); transform: translateY(-3px);}
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 9999; opacity: 0; visibility: hidden; transition: 0.3s; display: flex; justify-content: center; align-items: center;}
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-box { background: white; width: 90%; max-width: 400px; border-radius: 20px; padding: 35px 30px; text-align: center; transform: translateY(20px); transition: 0.3s; box-shadow: 0 20px 40px rgba(0,0,0,0.2);}
+        .modal-overlay.active .modal-box { transform: translateY(0); }
+        .modal-icon { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin: 0 auto 20px auto; }
+        .modal-success .modal-icon { background: #d1fae5; color: var(--success); }
+        .modal-error .modal-icon { background: #fee2e2; color: var(--danger); }
+        .modal-btn { background: var(--admin); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; font-family: 'Anuphan'; font-size: 1.05rem;}
+    </style>
+</head>
+<body>
+
+    <datalist id="teacherList"></datalist>
+    <datalist id="subjectList"></datalist>
+
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-box" id="modalBox">
+            <div class="modal-icon" id="modalIcon"></div>
+            <h3 id="modalTitle" style="font-size:1.4rem; font-weight:800; margin-bottom:10px;">แจ้งเตือน</h3>
+            <p id="modalText" style="color:var(--text-muted); margin-bottom:25px;">ข้อความ</p>
+            <button class="modal-btn" onclick="document.getElementById('customModal').classList.remove('active')">ตกลง</button>
+        </div>
+    </div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="collapse-btn" onclick="document.getElementById('sidebar').classList.toggle('collapsed'); document.getElementById('main-wrapper').classList.toggle('expanded');"><i class="fa-solid fa-chevron-left"></i></button>
+            <i class="fa-solid fa-user-shield fa-2x" style="margin-bottom: 10px;"></i>
+            <h3>KN Educator Hub<br><small style="font-weight:400; opacity: 0.8;">(Administrator)</small></h3>
+        </div>
+        <div class="menu-category">เมนูส่วนตัว</div>
+        <a href="dashboard.html" class="menu-item"><i class="fa-solid fa-house main-icon"></i> <span>หน้าแรก (Dashboard)</span></a>
+        
+        <div class="menu-category" style="color:var(--admin);">โหมดผู้ดูแลระบบ</div>
+        <a href="admin-subjects.html" class="menu-item admin-menu"><i class="fa-solid fa-book-open main-icon"></i> <span>ตั้งค่า & จัดการวิชา</span></a>
+        <a href="admin-bulk-plan.html" class="menu-item admin-menu admin-active"><i class="fa-solid fa-folder-tree main-icon"></i> <span>ลงตารางสอน (Bulk)</span></a>
+        <a href="admin-workload.html" class="menu-item admin-menu"><i class="fa-solid fa-chart-pie main-icon"></i> <span>ภาพรวม & วิเคราะห์</span></a>
+        <a href="admin-leave-approve.html" class="menu-item admin-menu"><i class="fa-solid fa-clipboard-check main-icon"></i> <span>อนุมัติการลา (HR)</span></a>
+
+        <div class="menu-category">ระบบและช่วยเหลือ</div>
+        <a href="#" class="menu-item" style="color:var(--danger);" onclick="logout()"><i class="fa-solid fa-right-from-bracket main-icon"></i> <span>ออกจากระบบ</span></a>
+    </aside>
+
+    <div class="main-wrapper" id="main-wrapper">
+        <div class="top-navbar">
+            <div class="navbar-left">
+                <i class="fa-solid fa-bars toggle-btn" onclick="document.getElementById('sidebar').classList.toggle('show');" style="color:var(--admin);"></i>
+                <h2 style="color:var(--admin);">ระบบจัดฐานข้อมูลวิชาการแบบกลุ่ม</h2>
+            </div>
+            <div class="nav-user">
+                <div class="nav-user-info">
+                    <div class="nav-user-id">ผู้ดูแลระบบ: <span id="nav_code"></span></div>
+                    <div class="nav-user-name" id="nav_fullname">กำลังโหลด...</div>
+                </div>
+                <i class="fa-solid fa-circle-user"></i>
+            </div>
+        </div>
+
+        <div class="content" id="main-content" style="display:none;">
+            <div class="card">
+                <div class="card-header">
+                    <div class="header-left">
+                        <i class="fa-solid fa-bolt main"></i>
+                        <div>
+                            <h2>ลงตารางสอนแบบกลุ่ม (Fast Entry)</h2>
+                            <p style="margin:0; color:var(--text-muted); font-size:0.9rem;">กดเพิ่มแถว ระบบจะคัดลอกข้อมูลจากแถวบนอัตโนมัติ ช่วยลดเวลาการพิมพ์ซ้ำ</p>
+                        </div>
+                    </div>
+                    <div class="term-badge">
+                        <i class="fa-solid fa-calendar-days"></i> ภาคเรียนที่: <span id="display_term">กำลังโหลด...</span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="bulk-table">
+                            <thead>
+                                <tr>
+                                    <th width="5%" style="text-align:center;">ลำดับ</th>
+                                    <th width="20%">รหัส หรือ ชื่อครู <span class="text-danger">*</span></th>
+                                    <th width="20%">รหัสวิชา <span class="text-danger">*</span></th>
+                                    <th width="10%">หน่วยกิต</th>
+                                    <th width="25%">ช่วงห้องเรียน <span class="text-danger">*</span></th>
+                                    <th width="10%">เทอม</th>
+                                    <th width="5%" style="text-align:center;"><i class="fa-solid fa-trash"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody id="bulkTableBody">
+                                </tbody>
+                        </table>
+                    </div>
+
+                    <button class="btn-add-row" onclick="addRow()"><i class="fa-solid fa-plus-circle"></i> เพิ่มแถวใหม่ (คัดลอกข้อมูลจากบรรทัดล่าสุด)</button>
+                    
+                    <button class="btn-submit-all" onclick="saveBulkData()"><i class="fa-solid fa-cloud-arrow-up"></i> บันทึกข้อมูลตารางสอนทั้งหมดเข้าสู่ระบบ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://yysxrbuzieyyzgjcjotf.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_D-ILjG-lssNJy0n86-PB7A_oEk9YP-r'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = null; let dbTeachers = []; let dbSubjects = []; let currentTerm = ""; let rowCount = 0;
+
+        function appModal(type, title, message) {
+            const overlay = document.getElementById('customModal'); const box = document.getElementById('modalBox'); const icon = document.getElementById('modalIcon');
+            box.className = 'modal-box'; document.getElementById('modalTitle').innerHTML = title; document.getElementById('modalText').innerHTML = message;
+            if (type === 'warning') { icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color:var(--warning);"></i>'; } 
+            else if (type === 'error') { icon.innerHTML = '<i class="fa-solid fa-circle-xmark" style="color:var(--danger);"></i>'; } 
+            else if (type === 'success') { icon.innerHTML = '<i class="fa-solid fa-circle-check" style="color:var(--success);"></i>'; } 
+            overlay.classList.add('active');
+        }
+
+        async function initAdmin() {
+            const sessionStr = localStorage.getItem('kn_teacher_session');
+            if (!sessionStr) return window.location.href = 'index.html';
+            currentUser = JSON.parse(sessionStr);
+            if(currentUser.role !== 'admin') return window.location.href = 'dashboard.html';
+
+            document.getElementById('nav_fullname').innerText = currentUser.full_name;
+            document.getElementById('nav_code').innerText = currentUser.teacher_code;
+            document.getElementById('main-content').style.display = 'block';
+            
+            await loadMasterData(); addRow(false);
+        }
+
+        async function loadMasterData() {
+            const [resSet, resTeach, resSubj] = await Promise.all([
+                supabaseClient.from('system_settings').select('current_term').eq('id', 1).single(),
+                supabaseClient.from('teachers').select('teacher_code, full_name').order('teacher_code', {ascending: true}),
+                supabaseClient.from('subjects').select('course_code, course_name, default_credit').order('course_code', {ascending: true})
+            ]);
+            if(resSet.data) { currentTerm = resSet.data.current_term; document.getElementById('display_term').innerText = currentTerm; }
+            if(resTeach.data) { dbTeachers = resTeach.data; let listHtml = ''; dbTeachers.forEach(t => listHtml += `<option value="${t.teacher_code}">${t.full_name}</option>`); document.getElementById('teacherList').innerHTML = listHtml; }
+            if(resSubj.data) { dbSubjects = resSubj.data; let listHtml = ''; dbSubjects.forEach(s => listHtml += `<option value="${s.course_code}">${s.course_name}</option>`); document.getElementById('subjectList').innerHTML = listHtml; }
+        }
+
+        function addRow(cloneFromLast = true) {
+            rowCount++; const tbody = document.getElementById('bulkTableBody'); const tr = document.createElement('tr'); tr.id = `row_${rowCount}`;
+            let prevTeacher = "", prevCourse = "", prevCredit = "", prevRooms = "", prevTerm = currentTerm;
+            
+            if (cloneFromLast && rowCount > 1) {
+                const lastNum = tbody.lastElementChild.id.replace('row_', '');
+                prevTeacher = document.getElementById(`t_${lastNum}`).value; prevCourse = document.getElementById(`c_${lastNum}`).value;
+                prevCredit = document.getElementById(`cr_${lastNum}`).value; prevRooms = document.getElementById(`r_${lastNum}`).value;
+                prevTerm = document.getElementById(`term_${lastNum}`).value;
+            }
+
+            tr.innerHTML = `
+                <td style="text-align:center; font-weight:800; color:var(--text-muted); font-size:1.1rem; padding-top:20px;">${rowCount}</td>
+                <td><input type="text" class="bulk-input" id="t_${rowCount}" list="teacherList" placeholder="รหัส หรือชื่อครู" value="${prevTeacher}" onblur="validateTeacher('${rowCount}')"><span class="info-text" id="info_t_${rowCount}"></span></td>
+                <td><input type="text" class="bulk-input" id="c_${rowCount}" list="subjectList" placeholder="รหัสวิชา" value="${prevCourse}" onblur="validateCourse('${rowCount}')"><span class="info-text" id="info_c_${rowCount}"></span></td>
+                <td><input type="number" step="0.5" min="0" class="bulk-input" id="cr_${rowCount}" value="${prevCredit}"></td>
+                <td><input type="text" class="bulk-input" id="r_${rowCount}" placeholder="เช่น 101-106" value="${prevRooms}"></td>
+                <td><input type="text" class="bulk-input" id="term_${rowCount}" value="${prevTerm}"></td>
+                <td style="text-align:center; padding-top:15px;"><button class="btn-del-row" onclick="removeRow('row_${rowCount}')"><i class="fa-solid fa-xmark"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+            if (cloneFromLast && rowCount > 1) { validateTeacher(rowCount); validateCourse(rowCount, false); }
+        }
+
+        function removeRow(rowId) { document.getElementById(rowId)?.remove(); }
+
+        function validateTeacher(rowId) {
+            const inputEl = document.getElementById(`t_${rowId}`); const infoEl = document.getElementById(`info_t_${rowId}`);
+            let val = inputEl.value.trim().toUpperCase(); inputEl.value = val;
+            if(!val) { infoEl.innerText = ""; return; }
+            const found = dbTeachers.find(t => t.teacher_code === val);
+            if(found) { infoEl.innerText = found.full_name; infoEl.className = "info-text"; } 
+            else { infoEl.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> ไม่พบข้อมูลครู"; infoEl.className = "info-text error-text"; }
+        }
+
+        function validateCourse(rowId, updateCredit = true) {
+            const inputEl = document.getElementById(`c_${rowId}`); const infoEl = document.getElementById(`info_c_${rowId}`); const creditEl = document.getElementById(`cr_${rowId}`);
+            let val = inputEl.value.trim().toUpperCase(); inputEl.value = val;
+            if(!val) { infoEl.innerText = ""; return; }
+            const found = dbSubjects.find(s => s.course_code === val);
+            if(found) {
+                infoEl.innerText = found.course_name; infoEl.className = "info-text";
+                if(updateCredit && !creditEl.value) creditEl.value = found.default_credit; 
+            } else { infoEl.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> ไม่พบวิชา"; infoEl.className = "info-text error-text"; }
+        }
+
+        function calculateWorkload(credit, roomsStr) {
+            let totalRooms = 0;
+            if(roomsStr.trim() !== '') {
+                const parts = roomsStr.split(',');
+                for(let part of parts) {
+                    part = part.trim();
+                    if(part.includes('-')) { const [start, end] = part.split('-'); const s = parseInt(start); const e = parseInt(end); if(!isNaN(s) && !isNaN(e) && e >= s) totalRooms += (e - s + 1); } 
+                    else if(part.length > 0) { totalRooms += 1; }
+                }
+            }
+            return { totalRooms, totalPeriods: totalRooms * (credit / 0.5) };
+        }
+
+        async function saveBulkData() {
+            const tbody = document.getElementById('bulkTableBody'); const rows = tbody.querySelectorAll('tr');
+            if(rows.length === 0) return appModal('warning', 'ไม่มีข้อมูล', 'กรุณาเพิ่มข้อมูลอย่างน้อย 1 แถว');
+
+            let payloadArray = []; let hasError = false;
+
+            for(let i=0; i<rows.length; i++) {
+                let rId = rows[i].id.replace('row_', '');
+                let t_code = document.getElementById(`t_${rId}`).value.trim().toUpperCase(); let c_code = document.getElementById(`c_${rId}`).value.trim().toUpperCase();
+                let credit = parseFloat(document.getElementById(`cr_${rId}`).value); let rooms = document.getElementById(`r_${rId}`).value.trim(); let term = document.getElementById(`term_${rId}`).value.trim();
+                
+                if(!t_code && !c_code && !rooms) continue; 
+                let t_valid = dbTeachers.find(t => t.teacher_code === t_code); let c_valid = dbSubjects.find(s => s.course_code === c_code);
+
+                if(!t_valid || !c_valid || isNaN(credit) || rooms === "") { hasError = true; rows[i].style.backgroundColor = '#fee2e2'; } 
+                else {
+                    rows[i].style.backgroundColor = 'transparent'; let calc = calculateWorkload(credit, rooms);
+                    payloadArray.push({ teacher_code: t_code, course_code: c_code, credit: credit, class_rooms: rooms, total_rooms: calc.totalRooms, total_periods: calc.totalPeriods, term: term });
+                }
+            }
+
+            if(hasError) return appModal('error', 'ข้อมูลไม่ถูกต้อง', 'แถวสีแดงอาจพิมพ์รหัสผิดหรือลืมกรอกข้อมูล กรุณาแก้ไขครับ');
+            if(payloadArray.length === 0) return appModal('warning', 'ไม่มีข้อมูล', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+
+            const btn = document.querySelector('.btn-submit-all'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...'; btn.disabled = true;
+            const { error } = await supabaseClient.from('teaching_plans').insert(payloadArray);
+            if(error) { appModal('error', 'บันทึกไม่สำเร็จ', error.message); } 
+            else { appModal('success', 'บันทึกสำเร็จ!', `นำเข้าข้อมูลตารางสอนจำนวน ${payloadArray.length} รายการ เรียบร้อยแล้ว`); tbody.innerHTML = ''; rowCount = 0; addRow(false); }
+            btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> บันทึกข้อมูลตารางสอนทั้งหมดเข้าสู่ระบบ'; btn.disabled = false;
+        }
+
+        function logout() { if(confirm("ออกจากระบบ?")) { localStorage.removeItem('kn_teacher_session'); window.location.href = 'index.html'; } }
+        window.onload = initAdmin;
+    </script>
+</body>
+</html>

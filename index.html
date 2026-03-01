@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - KN Educator Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --main-blue: #1f8ffd; 
+            --dark-blue: #0b5fa6; 
+            --bg-gray: #f4f7f9;
+            --text-dark: #2c3e50; 
+            --text-muted: #7f8c8d;
+            --success: #27ae60; 
+            --warning: #f39c12; 
+            --danger: #e74c3c; 
+            --border-color: #eaeaea;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Anuphan', sans-serif; }
+        body { background-color: var(--bg-gray); color: var(--text-dark); display: flex; min-height: 100vh; overflow: hidden; }
+
+        .split-container { display: flex; width: 100%; height: 100vh; }
+        
+        .left-panel {
+            flex: 1.2;
+            background: linear-gradient(135deg, var(--main-blue) 0%, var(--dark-blue) 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        .left-panel::before {
+            content: ''; position: absolute; width: 150%; height: 150%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 60%);
+            top: -25%; left: -25%; animation: pulse 10s infinite alternate;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+        
+        .brand-logo { font-size: 5rem; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        
+        .left-panel h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 10px; text-align: center; line-height: 1.3;}
+        .left-panel p { font-size: 1.1rem; font-weight: 400; opacity: 0.9; text-align: center; max-width: 80%;}
+
+        .right-panel {
+            flex: 1; background: white; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; padding: 40px; position: relative;
+        }
+        .form-wrapper { width: 100%; max-width: 420px; }
+
+        .form-title { font-size: 1.8rem; font-weight: 700; color: var(--dark-blue); margin-bottom: 10px; text-align: center;}
+        .form-subtitle { font-size: 1rem; color: var(--text-muted); margin-bottom: 30px; text-align: center;}
+
+        .input-group { margin-bottom: 20px; position: relative; }
+        .input-group label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-dark); font-size: 0.95rem; }
+        
+        .input-with-icon { position: relative; }
+        .input-with-icon i { position: absolute; top: 50%; left: 15px; transform: translateY(-50%); color: #a0aab5; font-size: 1.1rem; }
+        .input-with-icon input {
+            width: 100%; padding: 14px 15px 14px 45px; border: 1.5px solid #ced4da;
+            border-radius: 8px; font-size: 1rem; font-weight: 400; transition: 0.3s; background: #fdfdfd;
+        }
+        .input-with-icon input:focus {
+            border-color: var(--main-blue); outline: none; box-shadow: 0 0 0 3px rgba(31,143,253,0.15); background: white;
+        }
+
+        .btn-submit {
+            width: 100%; padding: 15px; background: var(--main-blue); color: white; border: none;
+            border-radius: 8px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.3s;
+            display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;
+        }
+        .btn-submit:hover { background: var(--dark-blue); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(31,143,253,0.3); }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 9999; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-box { background: white; width: 90%; max-width: 400px; border-radius: 16px; padding: 35px 30px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); transform: translateY(20px) scale(0.95); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .modal-overlay.active .modal-box { transform: translateY(0) scale(1); }
+        
+        .modal-icon { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin: 0 auto 20px auto; }
+        .modal-warning .modal-icon { background: rgba(243, 156, 18, 0.1); color: var(--warning); }
+        .modal-success .modal-icon { background: rgba(39, 174, 96, 0.1); color: var(--success); }
+        .modal-error .modal-icon { background: rgba(231, 76, 60, 0.1); color: var(--danger); }
+        
+        .modal-title { font-size: 1.4rem; font-weight: 700; color: var(--text-dark); margin-bottom: 10px; }
+        .modal-text { font-size: 1rem; color: var(--text-muted); margin-bottom: 25px; line-height: 1.5; font-weight: 400;}
+        .modal-btn { background: var(--main-blue); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-family: 'Anuphan'; font-size: 1.05rem; font-weight: 700; cursor: pointer; width: 100%; transition: 0.2s; }
+        .modal-btn:hover { filter: brightness(0.9); }
+
+        @media (max-width: 900px) {
+            .split-container { flex-direction: column; height: auto; min-height: 100vh;}
+            .left-panel { flex: none; padding: 40px 20px; }
+            .brand-logo { font-size: 4rem; }
+            .left-panel h1 { font-size: 1.8rem; }
+            .right-panel { padding: 40px 20px; flex: 1; align-items: flex-start;}
+            .form-wrapper { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-box" id="modalBox">
+            <div class="modal-icon" id="modalIcon"><i class="fa-solid fa-bell"></i></div>
+            <h3 class="modal-title" id="modalTitle">แจ้งเตือน</h3>
+            <p class="modal-text" id="modalText">ข้อความ</p>
+            <button class="modal-btn" onclick="closeModal()">ตกลง</button>
+        </div>
+    </div>
+
+    <div class="split-container">
+        <div class="left-panel">
+            <i class="fa-solid fa-chalkboard-user brand-logo"></i>
+            <h1>KN Educator Hub</h1>
+            <p>ระบบบริหารจัดการข้อมูลและพื้นที่ทำงานส่วนบุคคล<br>สำหรับบุคลากรครู โรงเรียนกาญจนาวิทยานุสรณ์</p>
+        </div>
+
+        <div class="right-panel">
+            <div class="form-wrapper">
+                
+                <h2 class="form-title">เข้าสู่ระบบ</h2>
+                <p class="form-subtitle">เข้าใช้งานระบบด้วยอีเมลและรหัสประจำตัวครู</p>
+
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="input-group">
+                        <label>อีเมลองค์กร (@kn.nst.ac.th.com)</label>
+                        <div class="input-with-icon">
+                            <i class="fa-regular fa-envelope"></i>
+                            <input type="email" id="login_email" placeholder="เช่น teacher@kn.nst.ac.th.com" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>รหัสประจำตัวครู (Teacher ID)</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-id-badge"></i>
+                            <input type="text" id="login_code" placeholder="เช่น KN-NST0001" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit" id="btn-login"><i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบ</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ระบบ Custom Modal
+        function appModal(type, title, message) {
+            const overlay = document.getElementById('customModal');
+            const box = document.getElementById('modalBox');
+            const icon = document.getElementById('modalIcon');
+            
+            box.className = 'modal-box'; 
+            document.getElementById('modalTitle').innerHTML = title;
+            document.getElementById('modalText').innerHTML = message;
+
+            if (type === 'warning') { box.classList.add('modal-warning'); icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>'; } 
+            else if (type === 'error') { box.classList.add('modal-error'); icon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>'; } 
+            else if (type === 'success') { box.classList.add('modal-success'); icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>'; } 
+
+            overlay.classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('customModal').classList.remove('active'); }
+
+        // เชื่อมต่อฐานข้อมูล Supabase
+        const SUPABASE_URL = 'https://yysxrbuzieyyzgjcjotf.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_D-ILjG-lssNJy0n86-PB7A_oEk9YP-r';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ระบบเข้าสู่ระบบ (เช็คจากตาราง teachers โดยตรง)
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-login');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบข้อมูล...';
+            btn.disabled = true;
+
+            const email = document.getElementById('login_email').value.trim();
+            const code = document.getElementById('login_code').value.trim().toUpperCase();
+
+            // ดึงข้อมูลจากฐานข้อมูลโดยใช้อีเมลและรหัสครู
+            const { data, error } = await supabaseClient
+                .from('teachers')
+                .select('*')
+                .eq('email', email)
+                .eq('teacher_code', code)
+                .single();
+
+            if (error || !data) {
+                appModal('error', 'ไม่พบข้อมูลในระบบ', 'อีเมล หรือ รหัสประจำตัวครูไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง');
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบ';
+                btn.disabled = false;
+            } else {
+                // ถ้าล็อกอินสำเร็จ เก็บข้อมูลลง LocalStorage จำลองการทำ Session
+                localStorage.setItem('kn_teacher_session', JSON.stringify(data));
+                
+                appModal('success', 'เข้าสู่ระบบสำเร็จ!', 'กำลังพาท่านเข้าสู่หน้า Dashboard...');
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+            }
+        }
+
+        // เช็คว่าล็อกอินค้างไว้หรือไม่
+        window.onload = () => {
+            const session = localStorage.getItem('kn_teacher_session');
+            if (session) {
+                window.location.href = 'dashboard.html';
+            }
+        };
+    </script>
+</body>
+</html>
