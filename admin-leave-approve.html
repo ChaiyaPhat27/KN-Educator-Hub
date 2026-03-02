@@ -3,103 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>อนุมัติการลางาน (HR) - KN Educator Hub</title>
-    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>อนุมัติลางาน (HR) - KN Educator Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         :root {
-            --main-blue: #1f8ffd; --dark-blue: #0b5fa6; --bg-gray: #f4f7f9;
-            --sidebar-bg: #ffffff; --text-dark: #2c3e50; --text-muted: #5a6673;
-            --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --border-color: #eaeaea;
-            --admin-color: #8e44ad; --admin-light: #f4e8f9;
+            --primary: #1f8ffd; --primary-dark: #0b5fa6; --primary-light: #e8f4fd;
+            --admin: #8e44ad; --admin-dark: #732d91; --admin-light: #f4e8f9;
+            --bg-gray: #f3f4f6; --surface: #ffffff;
+            --text-dark: #1f2937; --text-muted: #6b7280;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --border-color: #e5e7eb;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Anuphan', sans-serif; }
-        body { background-color: var(--bg-gray); color: var(--text-dark); display: flex; min-height: 100vh; overflow-x: hidden; }
-        
-        /* ---------------------------------
-           1. Sidebar & Navbar
-        --------------------------------- */
-        .sidebar { width: 300px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; transition: all 0.3s ease; }
-        .sidebar-header { padding: 30px 15px; text-align: center; border-bottom: 1px solid var(--border-color); background: var(--dark-blue); color: white; position: sticky; top: 0; z-index: 2; }
-        .sidebar-header h3 { font-size: 1.15rem; margin-top: 15px; font-weight: 600; }
-        .menu-category { font-size: 1.00rem; font-weight: 700; color: rgb(27, 102, 178); padding: 20px 30px 10px 20px; }
-        .menu-item { display: flex; align-items: center; padding: 12px 20px; color: var(--text-dark); text-decoration: none; font-size: 0.95rem; font-weight: 500; transition: 0.2s; margin-bottom: 10px; border-radius: 0 250px 250px 0; margin-right: 20px;}
-        .menu-item i.main-icon { width: 30px; font-size: 1.1rem; text-align: center; margin-right: 15px; color: #7f8c8d;}
+        body { background-color: var(--bg-gray); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; display: flex; flex-direction: column; }
 
-        .menu-item.admin-menu:hover { background: var(--admin-light); color: var(--admin-color); }
-        .menu-item.admin-active { background: var(--admin-light); color: var(--admin-color); font-weight: 700; border-left: 8px solid var(--admin-color); border-radius:0 35px 35px 0;}
-        .menu-item.admin-active i.main-icon { color: var(--admin-color); font-size: 1.6rem; transform: scale(0.85); }
+        /* Navbar มาตรฐาน */
+        .top-navbar { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 90; box-shadow: 0 2px 10px rgba(0,0,0,0.02);}
+        .navbar-left { display: flex; align-items: center; gap: 20px; }
+        .btn-back { background: var(--bg-gray); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-family: 'Anuphan'; font-weight: 700; font-size: 0.95rem; color: var(--text-dark); display: flex; align-items: center; gap: 8px; transition: 0.2s; text-decoration: none;}
+        .btn-back:hover { background: #e5e7eb; }
+        .navbar-left h2 { margin: 0; font-size: 1.3rem; color: var(--admin); font-weight: 800; border-left: 2px solid var(--border-color); padding-left: 20px;}
         
-        .main-wrapper { flex: 1; margin-left: 300px; display: flex; flex-direction: column; width: calc(100% - 300px); }
-        .top-navbar { background: white; padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 90; box-shadow: 0 2px 10px rgba(0,0,0,0.02);}
-        .navbar-left h2 { margin: 0; font-size: 1.15rem; color: var(--dark-blue); font-weight: 700; }
-        
-        .nav-user { display: flex; align-items: center; gap: 15px; }
-        .nav-user-info { text-align: right; line-height: 1.3; }
-        .nav-user-id { font-size: 0.85rem; color: var(--text-muted); font-weight: 500;}
-        .nav-user-name { font-size: 1.05rem; color: var(--dark-blue); font-weight: 700; }
-        .nav-user i { font-size: 2.2rem; color: var(--admin-color); }
+        .nav-user { display: flex; align-items: center; gap: 15px; padding: 5px 15px; background: var(--admin-light); border-radius: 50px;}
+        .nav-user-info { text-align: right; line-height: 1.2; }
+        .nav-user-id { font-size: 0.8rem; color: var(--admin); font-weight: 700;}
+        .nav-user-name { font-size: 1rem; color: var(--text-dark); font-weight: 800; }
+        .nav-user i { font-size: 2rem; color: var(--admin); }
 
-        /* ---------------------------------
-           2. Content Area & Stats
-        --------------------------------- */
-        .content { padding: 30px; max-width: 1300px; margin: 0 auto; width: 100%; }
-        
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 25px; }
-        .stat-box { background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
-        .stat-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 25px; flex-shrink: 0;}
+        /* Content Area */
+        .main-wrapper { flex: 1; width: 100%; display: flex; flex-direction: column;}
+        .content { padding: 40px; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+        .sys-banner { background: linear-gradient(135deg, var(--admin) 0%, #a855f7 100%); color: white; border-radius: 16px; padding: 25px 35px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 20px rgba(142,68,173,0.15);}
+        .sys-banner h2 { margin: 0; font-size: 1.5rem; font-weight: 800;}
+        .sys-banner p { margin: 8px 0 0 0; opacity: 0.9; font-size: 1rem; }
+
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-box { background: var(--surface); border: 1px solid var(--border-color); border-radius: 20px; padding: 25px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: 0.3s;}
+        .stat-box:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .stat-icon { width: 65px; height: 65px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0;}
         .stat-info h4 { margin: 0; font-size: 0.95rem; color: var(--text-muted); font-weight: 600;}
         .stat-info .val { font-size: 2.2rem; font-weight: 800; color: var(--text-dark); line-height: 1.2;}
 
-        .card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border-color); margin-bottom: 30px; overflow: hidden; padding: 25px; }
-        .section-title { font-size: 1.2rem; font-weight: 700; color: var(--dark-blue); border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;}
+        .card { background: var(--surface); border-radius: 20px; border: 1px solid var(--border-color); margin-bottom: 30px; overflow: hidden; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
+        .section-title { font-size: 1.3rem; font-weight: 800; color: var(--admin-dark); border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;}
 
-        /* ---------------------------------
-           3. Table
-        --------------------------------- */
+        /* Table */
         .table-responsive { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
-        table th, table td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; vertical-align: top;}
-        table th { background: #f8f9fa; color: var(--dark-blue); font-weight: 700; white-space: nowrap;}
+        table th { background: #f9fafb; color: var(--text-muted); font-weight: 800; padding: 20px; text-align: left; font-size: 0.9rem; text-transform: uppercase; white-space: nowrap; border-bottom: 1px solid var(--border-color);}
+        table td { padding: 20px; border-bottom: 1px dashed var(--border-color); font-size: 1rem; vertical-align: top; color: var(--text-dark);}
         table tbody tr:hover { background: #fdfdfd; }
 
-        .teacher-name { font-weight: 700; color: var(--main-blue); display: block; font-size: 1rem;}
-        .teacher-dept { font-size: 0.85rem; color: var(--text-muted); }
+        .teacher-name { font-weight: 800; color: var(--admin); display: block; font-size: 1.05rem;}
+        .teacher-dept { font-size: 0.85rem; color: var(--text-muted); font-weight: 700; margin-top: 5px;}
 
-        /* ป้ายสถานะ */
-        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;}
-        .status-pending { background: #fff3cd; color: var(--warning); border: 1px solid #ffe69c; }
-        .status-approved { background: #eefaf3; color: var(--success); border: 1px solid #a3e4be; }
-        .status-rejected { background: #fdecea; color: var(--danger); border: 1px solid #f5c6cb; }
+        /* Badges & Buttons */
+        .status-badge { padding: 6px 15px; border-radius: 30px; font-size: 0.85rem; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;}
+        .status-pending { background: #fef3c7; color: var(--warning); border: 1px solid #fde68a; }
+        .status-approved { background: #d1fae5; color: var(--success); border: 1px solid #a7f3d0; }
+        .status-rejected { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
 
-        .btn-action { border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; margin-right: 5px;}
-        .btn-approve { background: #eefaf3; color: var(--success); border: 1px solid #a3e4be;}
+        .btn-action { border: none; padding: 10px 18px; border-radius: 10px; cursor: pointer; transition: 0.2s; font-size: 0.95rem; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; margin-right: 8px; font-family: 'Anuphan';}
+        .btn-approve { background: #d1fae5; color: var(--success); border: 1px solid #a7f3d0;}
         .btn-approve:hover { background: var(--success); color: white; }
-        .btn-reject { background: #fdecea; color: var(--danger); border: 1px solid #f5c6cb;}
+        .btn-reject { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca;}
         .btn-reject:hover { background: var(--danger); color: white; }
 
-        /* ---------------------------------
-           4. Modal
-        --------------------------------- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999; opacity: 0; visibility: hidden; transition: 0.3s; display: flex; justify-content: center; align-items: center;}
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); z-index: 9999; opacity: 0; visibility: hidden; transition: 0.3s; display: flex; justify-content: center; align-items: center;}
         .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-box { background: white; width: 90%; max-width: 450px; border-radius: 16px; padding: 30px; transform: translateY(20px); transition: 0.3s; }
+        .modal-box { background: white; width: 90%; max-width: 500px; border-radius: 20px; padding: 40px; transform: translateY(20px); transition: 0.3s; box-shadow: 0 20px 40px rgba(0,0,0,0.2);}
         .modal-overlay.active .modal-box { transform: translateY(0); }
         
-        .modal-header h3 { margin: 0 0 10px 0; font-size: 1.3rem; font-weight: 700; }
-        .modal-text { color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;}
+        .modal-header h3 { margin: 0 0 10px 0; font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 10px;}
+        .modal-text { color: var(--text-muted); margin-bottom: 25px; font-size: 1.05rem; line-height: 1.5;}
         
-        .input-group label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-dark); font-size: 0.95rem; }
-        .input-group textarea { width: 100%; padding: 12px; border: 1.5px solid #ced4da; border-radius: 8px; font-size: 1rem; font-family: 'Anuphan'; outline: none; margin-bottom: 20px;}
-        .input-group textarea:focus { border-color: var(--admin-color); box-shadow: 0 0 0 3px rgba(142,68,173,0.15); }
+        .input-group label { display: block; font-weight: 800; margin-bottom: 10px; color: var(--text-dark); font-size: 1rem; }
+        .input-group textarea { width: 100%; padding: 15px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 1rem; font-family: 'Anuphan'; outline: none; margin-bottom: 25px; background: #f9fafb; resize: vertical;}
+        .input-group textarea:focus { border-color: var(--admin); box-shadow: 0 0 0 3px rgba(142,68,173,0.15); background: white;}
 
-        .modal-actions { display: flex; gap: 10px; }
-        .btn-confirm { flex: 1; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; font-family: 'Anuphan'; font-size: 1rem;}
-        .btn-cancel { flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: 'Anuphan'; font-size: 1rem;}
-        .btn-cancel:hover { background: #7f8c8d; }
+        .modal-actions { display: flex; gap: 15px; }
+        .btn-confirm { flex: 2; border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; color: white; font-family: 'Anuphan'; font-size: 1.05rem;}
+        .btn-cancel { flex: 1; background: #e5e7eb; color: var(--text-dark); border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; font-family: 'Anuphan'; font-size: 1.05rem;}
+        .btn-cancel:hover { background: #d1d5db; }
+        
+        @media (max-width: 900px) {
+            .grid-3 { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -108,11 +103,11 @@
         <div class="modal-box">
             <div class="modal-header">
                 <h3 id="actionTitle">ยืนยันการดำเนินการ</h3>
-                <p class="modal-text" id="actionDesc">คุณกำลังพิจารณาใบลาของ...</p>
             </div>
+            <p class="modal-text" id="actionDesc">พิจารณาใบลา...</p>
             <div class="input-group">
-                <label>หมายเหตุถึงผู้ยื่นขอ (เผื่อมี)</label>
-                <textarea id="approverComment" rows="3" placeholder="ระบุเหตุผล หรือข้อความถึงผู้ยื่นขอ..."></textarea>
+                <label>หมายเหตุถึงผู้ยื่นขอ (ถ้ามี)</label>
+                <textarea id="approverComment" rows="4" placeholder="ระบุเหตุผลเพิ่มเติมสำหรับการอนุมัติหรือปฏิเสธ..."></textarea>
             </div>
             <input type="hidden" id="targetLeaveId">
             <input type="hidden" id="targetAction">
@@ -123,104 +118,82 @@
         </div>
     </div>
 
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <i class="fa-solid fa-user-shield fa-2x" style="margin-bottom: 10px; color: #e0b0ff;"></i>
-            <h3>KN Educator Hub<br><small style="color:#e0b0ff; font-weight:400;">(Administrator)</small></h3>
+    <div class="top-navbar">
+        <div class="navbar-left">
+            <a href="dashboard.html" class="btn-back">
+                <i class="fa-solid fa-arrow-left"></i> กลับหน้าหลัก
+            </a>
+            <h2>KN Educator Hub | ศูนย์อนุมัติการลางาน (HR Center)</h2>
         </div>
-        <div class="menu-category">เมนูส่วนตัว</div>
-        <a href="dashboard.html" class="menu-item"><i class="fa-solid fa-house main-icon"></i> <span>หน้าแรก (Dashboard)</span></a>
-        
-        <div class="menu-category" style="color:var(--admin-color);">โหมดผู้ดูแลระบบ</div>
-        <a href="admin-subjects.html" class="menu-item admin-menu"><i class="fa-solid fa-book-open main-icon"></i> <span>ตั้งค่า & จัดการวิชา</span></a>
-        <a href="admin-bulk-plan.html" class="menu-item admin-menu"><i class="fa-solid fa-folder-tree main-icon"></i> <span>ลงตารางสอน (Bulk)</span></a>
-        <a href="admin-workload.html" class="menu-item admin-menu"><i class="fa-solid fa-chart-pie main-icon"></i> <span>ภาพรวม & วิเคราะห์</span></a>
-        <a href="admin-leave-approve.html" class="menu-item admin-menu admin-active"><i class="fa-solid fa-clipboard-check main-icon"></i> <span>อนุมัติการลา (HR)</span></a>
-
-        <div class="menu-category">ระบบและช่วยเหลือ</div>
-        <a href="#" class="menu-item" style="color:var(--danger);" onclick="logout()"><i class="fa-solid fa-right-from-bracket main-icon"></i> <span>ออกจากระบบ</span></a>
-    </aside>
+        <div class="nav-user" id="nav_user_box">
+            <div class="nav-user-info">
+                <div class="nav-user-id">ผู้ดูแลระบบ: <span id="nav_code">กำลังโหลด...</span></div>
+                <div class="nav-user-name" id="nav_fullname">กำลังโหลดข้อมูล...</div>
+            </div>
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+    </div>
 
     <div class="main-wrapper">
-        <div class="top-navbar">
-            <div class="navbar-left">
-                <h2>ระบบบริหารงานบุคลากร: อนุมัติคำขอ (HR Dashboard)</h2>
-            </div>
-            <div class="nav-user">
-                <div class="nav-user-info">
-                    <div class="nav-user-id">ผู้ดูแลระบบ: <span id="nav_code" style="color:var(--admin-color); font-weight:700;"></span></div>
-                    <div class="nav-user-name" id="nav_fullname">กำลังโหลด...</div>
-                </div>
-                <i class="fa-solid fa-circle-user" style="color:var(--admin-color);"></i>
-            </div>
-        </div>
-
         <div class="content" id="main-content" style="display:none;">
             
-            <div class="grid-3">
-                <div class="stat-box" style="border-left: 5px solid var(--warning);">
-                    <div class="stat-icon" style="background:#fff3cd; color:var(--warning);"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                    <div class="stat-info">
-                        <h4>รอตรวจสอบ (Pending)</h4>
-                        <div class="val" id="stat_pending">0</div>
-                    </div>
-                </div>
-                <div class="stat-box" style="border-left: 5px solid var(--success);">
-                    <div class="stat-icon" style="background:#eefaf3; color:var(--success);"><i class="fa-solid fa-circle-check"></i></div>
-                    <div class="stat-info">
-                        <h4>อนุมัติแล้ว (Approved)</h4>
-                        <div class="val" id="stat_approved">0</div>
-                    </div>
-                </div>
-                <div class="stat-box" style="border-left: 5px solid var(--danger);">
-                    <div class="stat-icon" style="background:#fdecea; color:var(--danger);"><i class="fa-solid fa-circle-xmark"></i></div>
-                    <div class="stat-info">
-                        <h4>ไม่อนุมัติ (Rejected)</h4>
-                        <div class="val" id="stat_rejected">0</div>
-                    </div>
+            <div class="sys-banner">
+                <div>
+                    <h2>ศูนย์การจัดการทรัพยากรบุคคล (HR Center)</h2>
+                    <p>ระบบบริหารจัดการคำขอลางานและพิจารณาอนุมัติสำหรับบุคลากร</p>
                 </div>
             </div>
 
-            <div class="card" style="border-top: 4px solid var(--warning);">
-                <div class="section-title">
-                    <span style="color:var(--warning);"><i class="fa-solid fa-bell"></i> รายการขอลางานที่รอการตรวจสอบ</span>
+            <div class="grid-3">
+                <div class="stat-box" style="border-left: 6px solid var(--warning);">
+                    <div class="stat-icon" style="background:#fef3c7; color:var(--warning);"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <div class="stat-info"><h4>รอตรวจสอบ</h4><div class="val" id="stat_pending">0</div></div>
                 </div>
+                <div class="stat-box" style="border-left: 6px solid var(--success);">
+                    <div class="stat-icon" style="background:#d1fae5; color:var(--success);"><i class="fa-solid fa-check"></i></div>
+                    <div class="stat-info"><h4>อนุมัติแล้ว</h4><div class="val" id="stat_approved">0</div></div>
+                </div>
+                <div class="stat-box" style="border-left: 6px solid var(--danger);">
+                    <div class="stat-icon" style="background:#fee2e2; color:var(--danger);"><i class="fa-solid fa-xmark"></i></div>
+                    <div class="stat-info"><h4>ไม่อนุมัติ</h4><div class="val" id="stat_rejected">0</div></div>
+                </div>
+            </div>
+
+            <div class="card" style="border-top: 5px solid var(--warning);">
+                <div class="section-title" style="border:none; margin:0;"><span style="color:var(--warning);"><i class="fa-solid fa-bell"></i> รายการคำขอที่รอการพิจารณา</span></div>
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
-                                <th>ผู้ยื่นขอ</th>
-                                <th>ประเภท</th>
-                                <th>ช่วงวันที่ลา</th>
-                                <th width="30%">เหตุผล</th>
-                                <th>เอกสาร</th>
-                                <th style="text-align:center;">ดำเนินการ</th>
+                                <th width="20%">ผู้ยื่นขอ</th>
+                                <th width="15%">ประเภท</th>
+                                <th width="20%">ช่วงวันที่ลา</th>
+                                <th width="25%">เหตุผล / เอกสารอ้างอิง</th>
+                                <th width="20%" style="text-align:center;">ดำเนินการ</th>
                             </tr>
                         </thead>
                         <tbody id="pendingTableBody">
-                            <tr><td colspan="6" style="text-align:center; padding:30px; color:#7f8c8d;">กำลังโหลดข้อมูล...</td></tr>
+                            <tr><td colspan="5" style="text-align:center; padding:40px; color:#9ca3af;">กำลังโหลดข้อมูล...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="section-title">
-                    <span style="color:var(--dark-blue);"><i class="fa-solid fa-list-check"></i> ประวัติการพิจารณาคำขอ (History)</span>
-                </div>
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+            <div class="card" style="border-top: 5px solid var(--admin);">
+                <div class="section-title" style="border:none; margin:0;"><span><i class="fa-solid fa-list-check"></i> ประวัติการพิจารณาคำขอ</span></div>
+                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                     <table>
                         <thead>
                             <tr>
-                                <th>ผู้ยื่นขอ</th>
-                                <th>ประเภท</th>
-                                <th>ช่วงวันที่ลา</th>
-                                <th style="text-align:center;">สถานะ</th>
-                                <th>หมายเหตุจากเรา</th>
+                                <th width="20%">ผู้ยื่นขอ</th>
+                                <th width="15%">ประเภท</th>
+                                <th width="20%">ช่วงวันที่ลา</th>
+                                <th width="20%" style="text-align:center;">สถานะ</th>
+                                <th width="25%">หมายเหตุจากผู้อนุมัติ</th>
                             </tr>
                         </thead>
                         <tbody id="historyTableBody">
-                            <tr><td colspan="5" style="text-align:center; padding:30px; color:#7f8c8d;">กำลังโหลดข้อมูล...</td></tr>
+                            <tr><td colspan="5" style="text-align:center; padding:40px; color:#9ca3af;">กำลังโหลดข้อมูล...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -230,9 +203,6 @@
     </div>
 
     <script>
-        // ==========================================
-        // 1. ตั้งค่า Supabase
-        // ==========================================
         const SUPABASE_URL = 'https://yysxrbuzieyyzgjcjotf.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_D-ILjG-lssNJy0n86-PB7A_oEk9YP-r'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -241,179 +211,141 @@
 
         function formatDateThai(dateStr) {
             if(!dateStr) return "-";
-            const date = new Date(dateStr);
-            const months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+            const date = new Date(dateStr); const months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
             return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear() + 543}`;
         }
 
-        async function initAdmin() {
+        function loadSharedUI() {
             const sessionStr = localStorage.getItem('kn_teacher_session');
             if (!sessionStr) return window.location.href = 'index.html';
-            currentUser = JSON.parse(sessionStr);
+            const user = JSON.parse(sessionStr);
             
-            if(currentUser.role !== 'admin') {
-                alert("ปฏิเสธการเข้าถึง! เฉพาะผู้ดูแลระบบเท่านั้น");
-                return window.location.href = 'dashboard.html';
+            document.getElementById('nav_fullname').innerText = user.full_name;
+            document.getElementById('nav_code').innerText = user.teacher_code;
+            
+            if (user.role === 'admin') {
+                document.getElementById('nav_user_box').classList.add('admin-theme');
+            } else {
+                alert("ปฏิเสธการเข้าถึง! สำหรับแอดมินเท่านั้น");
+                window.location.href = 'dashboard.html';
             }
+            return user;
+        }
 
-            document.getElementById('nav_fullname').innerText = currentUser.full_name;
-            document.getElementById('nav_code').innerText = currentUser.teacher_code;
+        async function initAdmin() {
+            currentUser = loadSharedUI();
             document.getElementById('main-content').style.display = 'block';
-            
             loadLeaveRequests();
         }
 
-        // ==========================================
-        // 2. ดึงข้อมูลการลาทั้งหมด (Join กับตารางครู)
-        // ==========================================
         async function loadLeaveRequests() {
-            // ใช้ query ดึงข้อมูลลา พร้อมดึงชื่อครูและกลุ่มสาระจากตาราง teachers มาด้วย
-            const { data, error } = await supabaseClient
-                .from('leave_requests')
-                .select(`
-                    *,
-                    teachers ( full_name, department )
-                `)
-                .order('created_at', { ascending: false });
+            const { data, error } = await supabaseClient.from('leave_requests').select(`*, teachers(full_name, department)`).order('created_at', { ascending: false });
+            if(error) return console.error(error);
 
-            if(error) {
-                console.error(error); return;
-            }
-
-            const pendingBody = document.getElementById('pendingTableBody');
+            const pendingBody = document.getElementById('pendingTableBody'); 
             const historyBody = document.getElementById('historyTableBody');
-            pendingBody.innerHTML = '';
-            historyBody.innerHTML = '';
-
+            pendingBody.innerHTML = ''; historyBody.innerHTML = '';
+            
             let countPending = 0, countApproved = 0, countRejected = 0;
 
             if(!data || data.length === 0) {
-                pendingBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">ไม่มีคำขอใหม่</td></tr>';
-                historyBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">ไม่มีประวัติการพิจารณา</td></tr>';
+                pendingBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; font-weight:700; color:var(--text-muted);">ไม่มีคำขอที่รอการตรวจสอบ</td></tr>';
+                historyBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; font-weight:700; color:var(--text-muted);">ไม่มีประวัติการพิจารณา</td></tr>';
                 return;
             }
 
             data.forEach(item => {
                 const teacherName = item.teachers ? item.teachers.full_name : item.teacher_code;
                 const teacherDept = item.teachers ? item.teachers.department : '-';
-                
-                const periodStr = item.start_date === item.end_date 
-                                ? formatDateThai(item.start_date) 
-                                : `${formatDateThai(item.start_date)} - ${formatDateThai(item.end_date)}`;
-                
-                const docHtml = item.document_url 
-                                ? `<a href="${item.document_url}" target="_blank" style="color:var(--main-blue);"><i class="fa-solid fa-paperclip"></i> ดูเอกสาร</a>` 
-                                : `<span style="color:#ccc;">ไม่มีเอกสาร</span>`;
+                const periodStr = item.start_date === item.end_date ? formatDateThai(item.start_date) : `${formatDateThai(item.start_date)} - ${formatDateThai(item.end_date)}`;
+                const docHtml = item.document_url ? `<a href="${item.document_url}" target="_blank" style="color:var(--admin); font-weight:800; display:block; margin-top:8px; text-decoration:none;"><i class="fa-solid fa-link"></i> เปิดเอกสารแนบ</a>` : `<span style="color:#d1d5db; display:block; margin-top:8px;">ไม่มีเอกสารแนบ</span>`;
 
                 if(item.status === 'pending') {
                     countPending++;
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>
-                            <span class="teacher-name">${teacherName}</span>
-                            <span class="teacher-dept">${teacherDept}</span>
-                        </td>
-                        <td style="font-weight:600;">${item.leave_type}</td>
-                        <td>${periodStr}</td>
-                        <td style="color:#555; font-size:0.9rem;">${item.reason}</td>
-                        <td>${docHtml}</td>
+                        <td><span class="teacher-name">${teacherName}</span><span class="teacher-dept">กลุ่มสาระ: ${teacherDept}</span></td>
+                        <td style="font-weight:800;">${item.leave_type}</td> 
+                        <td style="font-weight:700;">${periodStr}</td>
+                        <td style="color:var(--text-dark); font-size:1rem;">${item.reason} ${docHtml}</td>
                         <td style="text-align:center; white-space:nowrap;">
                             <button class="btn-action btn-approve" onclick="openActionModal('${item.id}', 'approved', '${teacherName}', '${item.leave_type}')"><i class="fa-solid fa-check"></i> อนุมัติ</button>
                             <button class="btn-action btn-reject" onclick="openActionModal('${item.id}', 'rejected', '${teacherName}', '${item.leave_type}')"><i class="fa-solid fa-xmark"></i> ปฏิเสธ</button>
                         </td>
-                    `;
-                    pendingBody.appendChild(tr);
+                    `; pendingBody.appendChild(tr);
                 } else {
-                    if(item.status === 'approved') countApproved++;
+                    if(item.status === 'approved') countApproved++; 
                     if(item.status === 'rejected') countRejected++;
                     
-                    let statusHtml = item.status === 'approved' 
-                        ? `<span class="status-badge status-approved"><i class="fa-solid fa-check"></i> อนุมัติ</span>`
-                        : `<span class="status-badge status-rejected"><i class="fa-solid fa-xmark"></i> ไม่อนุมัติ</span>`;
-
+                    let statusHtml = item.status === 'approved' ? `<span class="status-badge status-approved"><i class="fa-solid fa-check"></i> อนุมัติแล้ว</span>` : `<span class="status-badge status-rejected"><i class="fa-solid fa-xmark"></i> ไม่อนุมัติ</span>`;
+                    
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>
-                            <span class="teacher-name">${teacherName}</span>
-                        </td>
-                        <td style="font-weight:600;">${item.leave_type}</td>
-                        <td>${periodStr}</td>
-                        <td style="text-align:center;">${statusHtml}</td>
-                        <td style="color:var(--text-muted); font-size:0.85rem;">${item.approver_comment || '-'}</td>
-                    `;
-                    historyBody.appendChild(tr);
+                        <td><span class="teacher-name">${teacherName}</span></td> 
+                        <td style="font-weight:800;">${item.leave_type}</td> 
+                        <td style="font-weight:700;">${periodStr}</td>
+                        <td style="text-align:center;">${statusHtml}</td> 
+                        <td style="color:var(--text-dark); font-size:0.95rem; font-weight:600;">${item.approver_comment || '-'}</td>
+                    `; historyBody.appendChild(tr);
                 }
             });
 
-            if(countPending === 0) pendingBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--success); font-weight:700;"><i class="fa-solid fa-face-smile"></i> จัดการคำขอครบหมดแล้ว!</td></tr>';
-            if((countApproved + countRejected) === 0) historyBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">ไม่มีประวัติการพิจารณา</td></tr>';
+            if(countPending === 0) pendingBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--success); font-weight:800; font-size:1.1rem;">จัดการคำขอครบถ้วนแล้ว</td></tr>';
+            if((countApproved + countRejected) === 0) historyBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; font-weight:700; color:var(--text-muted);">ไม่มีประวัติการพิจารณา</td></tr>';
 
-            // อัปเดตตัวเลขสถิติ
-            document.getElementById('stat_pending').innerText = countPending;
-            document.getElementById('stat_approved').innerText = countApproved;
+            document.getElementById('stat_pending').innerText = countPending; 
+            document.getElementById('stat_approved').innerText = countApproved; 
             document.getElementById('stat_rejected').innerText = countRejected;
         }
 
-        // ==========================================
-        // 3. ระบบ Modal กดอนุมัติ/ไม่อนุมัติ
-        // ==========================================
         function openActionModal(id, action, name, leaveType) {
-            document.getElementById('targetLeaveId').value = id;
-            document.getElementById('targetAction').value = action;
-            document.getElementById('approverComment').value = ""; // ล้างช่องหมายเหตุ
+            document.getElementById('targetLeaveId').value = id; 
+            document.getElementById('targetAction').value = action; 
+            document.getElementById('approverComment').value = "";
             
-            const titleEl = document.getElementById('actionTitle');
+            const titleEl = document.getElementById('actionTitle'); 
             const btnEl = document.getElementById('btnConfirmAction');
             
-            document.getElementById('actionDesc').innerHTML = `พิจารณาคำขอ <b>${leaveType}</b> ของ <b>${name}</b>`;
-
-            if(action === 'approved') {
-                titleEl.innerHTML = '<i class="fa-solid fa-check-circle" style="color:var(--success);"></i> ยืนยันการอนุมัติ';
-                btnEl.style.backgroundColor = 'var(--success)';
-                btnEl.innerText = 'ยืนยันอนุมัติคำขอ';
-            } else {
-                titleEl.innerHTML = '<i class="fa-solid fa-circle-xmark" style="color:var(--danger);"></i> ยืนยันการไม่อนุมัติ';
-                btnEl.style.backgroundColor = 'var(--danger)';
-                btnEl.innerText = 'ปฏิเสธคำขอ';
+            document.getElementById('actionDesc').innerHTML = `กำลังพิจารณาคำขอ <b style="color:var(--text-dark);">${leaveType}</b> ของ <b style="color:var(--text-dark);">${name}</b>`;
+            
+            if(action === 'approved') { 
+                titleEl.innerHTML = '<i class="fa-solid fa-check-circle" style="color:var(--success);"></i> ยืนยันการอนุมัติ'; 
+                btnEl.style.backgroundColor = 'var(--success)'; 
+                btnEl.innerText = 'ยืนยันอนุมัติคำขอ'; 
+            } else { 
+                titleEl.innerHTML = '<i class="fa-solid fa-circle-xmark" style="color:var(--danger);"></i> ยืนยันการปฏิเสธ'; 
+                btnEl.style.backgroundColor = 'var(--danger)'; 
+                btnEl.innerText = 'ปฏิเสธคำขอ'; 
             }
-
             document.getElementById('actionModal').classList.add('active');
         }
-
-        function closeActionModal() {
-            document.getElementById('actionModal').classList.remove('active');
-        }
+        
+        function closeActionModal() { document.getElementById('actionModal').classList.remove('active'); }
 
         async function submitAction() {
-            const id = document.getElementById('targetLeaveId').value;
-            const action = document.getElementById('targetAction').value;
+            const id = document.getElementById('targetLeaveId').value; 
+            const action = document.getElementById('targetAction').value; 
             const comment = document.getElementById('approverComment').value.trim();
-
-            const btn = document.getElementById('btnConfirmAction');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...';
+            const btn = document.getElementById('btnConfirmAction'); 
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกข้อมูล...'; 
             btn.disabled = true;
 
-            // อัปเดตข้อมูล โดยส่ง รหัสของแอดมินคนที่กด เข้าไปด้วย
-            const { error } = await supabaseClient
-                .from('leave_requests')
-                .update({ 
-                    status: action,
-                    approver_comment: comment,
-                    approver_code: currentUser.teacher_code  // <-- เพิ่มบรรทัดนี้!
-                })
-                .eq('id', id);
-
-            if(error) {
-                alert("เกิดข้อผิดพลาด: " + error.message);
-            } else {
-                closeActionModal();
-                loadLeaveRequests(); // โหลดตารางใหม่
+            const { error } = await supabaseClient.from('leave_requests').update({ 
+                status: action, 
+                approver_comment: comment, 
+                approver_code: currentUser.teacher_code 
+            }).eq('id', id);
+            
+            if(error) { 
+                alert("เกิดข้อผิดพลาด: " + error.message); 
+            } else { 
+                closeActionModal(); 
+                loadLeaveRequests(); 
             }
-
             btn.disabled = false;
         }
-        
-        function logout() { if(confirm("ออกจากระบบ?")) { localStorage.removeItem('kn_teacher_session'); window.location.href = 'index.html'; } }
+
         window.onload = initAdmin;
     </script>
 </body>

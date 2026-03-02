@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แจ้งแผนการจัดสอบ - KN Educator Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --primary: #1f8ffd; --primary-dark: #0b5fa6; --primary-light: #e8f4fd;
+            --admin: #8e44ad; --admin-dark: #732d91; --admin-light: #f4e8f9;
+            --bg-gray: #f3f4f6; --surface: #ffffff;
+            --text-dark: #1f2937; --text-muted: #6b7280;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --border-color: #e5e7eb;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Anuphan', sans-serif; }
+        body { background-color: var(--bg-gray); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; display: flex; flex-direction: column; }
+
+        /* ==========================================
+           UI มาตรฐานใหม่: Top Navbar แบบไม่มี Sidebar
+        ========================================== */
+        .top-navbar { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 90; box-shadow: 0 2px 10px rgba(0,0,0,0.02);}
+        .navbar-left { display: flex; align-items: center; gap: 20px; }
+        .btn-back { background: var(--bg-gray); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-family: 'Anuphan'; font-weight: 700; font-size: 0.95rem; color: var(--text-dark); display: flex; align-items: center; gap: 8px; transition: 0.2s; text-decoration: none;}
+        .btn-back:hover { background: #e5e7eb; }
+        .navbar-left h2 { margin: 0; font-size: 1.3rem; color: var(--text-dark); font-weight: 800; border-left: 2px solid var(--border-color); padding-left: 20px;}
+        
+        .nav-user { display: flex; align-items: center; gap: 15px; padding: 5px 15px; background: var(--primary-light); border-radius: 50px;}
+        .nav-user.admin-theme { background: var(--admin-light); }
+        .nav-user-info { text-align: right; line-height: 1.2; }
+        .nav-user-id { font-size: 0.8rem; color: var(--primary); font-weight: 700;}
+        .nav-user.admin-theme .nav-user-id { color: var(--admin); }
+        .nav-user-name { font-size: 1rem; color: var(--text-dark); font-weight: 800; }
+        .nav-user i { font-size: 2rem; color: var(--primary); }
+        .nav-user.admin-theme i { color: var(--admin); }
+
+        /* ==========================================
+           Content Area
+        ========================================== */
+        .main-wrapper { flex: 1; width: 100%; display: flex; flex-direction: column;}
+        .content { padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; }
+
+        .sys-banner { background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%); color: white; border-radius: 16px; padding: 25px 35px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 20px rgba(31,143,253,0.15);}
+        .sys-banner h2 { margin: 0; font-size: 1.5rem; font-weight: 800;}
+        .sys-banner p { margin: 8px 0 0 0; opacity: 0.9; font-size: 1rem; }
+        .timer-badge { background: rgba(255,255,255,0.2); padding: 12px 20px; border-radius: 30px; font-weight: 800; font-size: 1rem; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3); display: flex; align-items: center; gap: 10px;}
+
+        .card { background: var(--surface); border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border-color); margin-bottom: 30px; overflow: hidden; }
+        .card-header { background: #fdfdfd; padding: 25px 35px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px;}
+        .card-header i { font-size: 1.8rem; color: var(--primary); }
+        .card-header h2 { font-size: 1.4rem; font-weight: 800; color: var(--text-dark); margin:0;}
+        
+        .card-body { padding: 35px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 25px; margin-bottom: 25px; }
+        
+        .input-group { margin-bottom: 25px; }
+        .input-group label { display: block; font-weight: 800; margin-bottom: 10px; color: var(--text-dark); font-size: 1rem; }
+        .input-group select, .input-group input[type="text"], .input-group input[type="number"] { width: 100%; padding: 15px 20px; border: 1.5px solid #d1d5db; border-radius: 12px; font-size: 1rem; transition: 0.3s; background: #f9fafb; font-family: 'Anuphan'; outline: none;}
+        .input-group select:focus, .input-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(31,143,253,0.15); background: white; }
+        .input-group input:read-only, .input-group select:disabled { background: #e5e7eb; color: #6b7280; cursor: not-allowed; border-color: #d1d5db;}
+
+        .room-checkbox-container { background: white; border: 1.5px solid #d1d5db; border-radius: 12px; padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; }
+        .room-checkbox-container label { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1.05rem; color: var(--text-dark); cursor: pointer; margin: 0; background: #f9fafb; padding: 8px 15px; border-radius: 8px; border: 1px solid var(--border-color); transition: 0.2s;}
+        .room-checkbox-container label:hover { background: var(--primary-light); border-color: var(--primary);}
+        .room-checkbox-container input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
+
+        .btn-fill-max { background: var(--primary-light); color: var(--primary); border: 1px solid #bfdbfe; padding: 0 25px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; font-family: 'Anuphan'; font-size: 0.95rem; white-space: nowrap; }
+        .btn-fill-max:hover { background: var(--primary); color: white; }
+
+        .alert-box { background: #fff3cd; border-left: 5px solid var(--warning); padding: 20px; border-radius: 12px; font-size: 1rem; color: #856404; margin-bottom: 30px; display: flex; gap: 15px; align-items: flex-start;}
+        .alert-box i { font-size: 1.6rem; color: var(--warning); }
+
+        .btn-submit { padding: 18px 30px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1.15rem; font-weight: 800; cursor: pointer; transition: 0.3s; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; box-shadow: 0 4px 15px rgba(31,143,253,0.3);}
+        .btn-submit:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-2px); }
+        .btn-submit:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; opacity: 0.8;}
+
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        table th { background: #f9fafb; color: var(--text-muted); font-weight: 800; padding: 20px; text-align: left; font-size: 0.9rem; text-transform: uppercase;}
+        table td { padding: 20px; border-bottom: 1px solid var(--border-color); font-size: 1rem; color: var(--text-dark);}
+        
+        .status-badge { padding: 6px 15px; border-radius: 30px; font-size: 0.85rem; font-weight: 800; display: inline-flex; align-items: center; gap: 8px;}
+        .status-pending { background: #fef3c7; color: var(--warning); }
+        .status-approved { background: #d1fae5; color: var(--success); }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 9999; opacity: 0; visibility: hidden; transition: 0.3s;}
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-box { background: white; width: 90%; max-width: 500px; border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); transform: translateY(20px); transition: 0.3s; }
+        .modal-overlay.active .modal-box { transform: translateY(0); }
+        
+        .modal-actions { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
+        .btn-print-go { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 800; font-family: 'Anuphan'; font-size: 1.1rem; width: 100%; cursor: pointer; transition: 0.3s;}
+        .btn-print-go:hover { background: var(--primary-dark); }
+        .btn-later { background: var(--bg-gray); color: var(--text-dark); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; font-weight: 800; font-family: 'Anuphan'; font-size: 1.1rem; width: 100%; cursor: pointer; transition: 0.3s;}
+        .btn-later:hover { background: #e5e7eb; }
+
+        @media (max-width: 900px) {
+            .grid-3, .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="modal-overlay" id="printSuggestModal">
+        <div class="modal-box">
+            <h3 style="font-size:1.6rem; font-weight:800; margin-bottom:15px; color:var(--text-dark);">บันทึกข้อมูลเรียบร้อย</h3>
+            <p style="color:var(--text-muted); margin-bottom:10px; line-height:1.6; font-size: 1.05rem;">ระบบได้รับแจ้งการจัดสอบรูปแบบ <b>กระดาษ</b> เรียบร้อยแล้ว<br>ต้องการส่งไฟล์ต้นฉบับไปยังศูนย์ถ่ายเอกสารเลยหรือไม่?</p>
+            <div class="modal-actions">
+                <button class="btn-print-go" onclick="window.location.href='teacher-print.html'"><i class="fa-solid fa-print"></i> ไปหน้าสั่งถ่ายเอกสาร</button>
+                <button class="btn-later" onclick="closeModal()">ยังไม่ส่งในตอนนี้</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="top-navbar">
+        <div class="navbar-left">
+            <a href="dashboard.html" class="btn-back">
+                <i class="fa-solid fa-arrow-left"></i> กลับหน้าหลัก
+            </a>
+            <h2>KN Educator Hub | ระบบแจ้งแผนการจัดสอบ</h2>
+        </div>
+        <div class="nav-user" id="nav_user_box">
+            <div class="nav-user-info">
+                <div class="nav-user-id" id="nav_role_title">รหัส: <span id="nav_code">กำลังโหลด...</span></div>
+                <div class="nav-user-name" id="nav_fullname">กำลังโหลดข้อมูล...</div>
+            </div>
+            <i class="fa-solid fa-circle-user" id="nav_profile_icon"></i>
+        </div>
+    </div>
+
+    <div class="main-wrapper" id="main-wrapper">
+        <div class="content" id="main-content" style="display: none;">
+            
+            <div class="sys-banner">
+                <div>
+                    <h2 id="display_exam_round">กำลังโหลดข้อมูลรอบการสอบ...</h2>
+                    <p>กรุณาระบุข้อมูลการวัดผล เพื่อให้ฝ่ายวิชาการบริหารจัดการตารางส่วนกลาง</p>
+                </div>
+                <div class="timer-badge" id="timer_display">
+                    <i class="fa-solid fa-clock fa-spin"></i> กำลังคำนวณเวลา...
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <div>
+                        <h2>แบบฟอร์มแจ้งข้อมูลการวัดผล</h2>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="alert-box">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <div>
+                            <b>กรณีมีผู้สอนร่วมในรายวิชาเดียวกัน:</b> <br>
+                            กรุณาปรึกษาและหาข้อสรุปร่วมกันในหมวด เพื่อกำหนดระยะเวลาสอบให้ตรงกันก่อนทำการบันทึกข้อมูล
+                        </div>
+                    </div>
+
+                    <form id="examForm" onsubmit="submitExamRequest(event)">
+                        <input type="hidden" id="current_term">
+                        <input type="hidden" id="exam_round_name">
+                        
+                        <div class="input-group">
+                            <label>เลือกรายวิชาที่รับผิดชอบ <span class="text-danger">*</span></label>
+                            <select id="course_select" required onchange="handleCourseChange()">
+                                <option value="">-- โหลดรายวิชาจากแผนการสอน --</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group" id="room_section" style="display: none;">
+                            <label>เลือกห้องเรียนที่จะจัดการสอบ <span class="text-danger">*</span></label>
+                            <div class="room-checkbox-container" id="room_checkboxes">
+                                </div>
+                            <small id="roomError" style="color:var(--danger); display:none; font-weight:700; margin-top:10px;"><i class="fa-solid fa-circle-exclamation"></i> กรุณาเลือกห้องสอบอย่างน้อย 1 ห้อง</small>
+                        </div>
+
+                        <div class="grid-3">
+                            <div class="input-group">
+                                <label>รูปแบบการจัดสอบ <span class="text-danger">*</span></label>
+                                <select id="schedule_type" required onchange="handleScheduleChange()">
+                                    <option value="ในตารางจัดสอบ">จัดสอบในตารางส่วนกลาง</option>
+                                    <option value="สอบนอกตาราง">สอบนอกตาราง (ดำเนินการเอง)</option>
+                                    <option value="ไม่มีการสอบ">ไม่มีการสอบ (ชิ้นงาน/ปฏิบัติ)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>ประเภทข้อสอบ <span class="text-danger">*</span></label>
+                                <select id="exam_medium" required>
+                                    <option value="กระดาษ">สอบด้วยกระดาษ</option>
+                                    <option value="ออนไลน์">สอบรูปแบบออนไลน์</option>
+                                    <option value="ปฏิบัติ/ชิ้นงาน">สอบปฏิบัติ หรือส่งชิ้นงาน</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>ระยะเวลาสอบ (นาที) <span class="text-danger">*</span></label>
+                                <div style="display: flex; gap: 15px;">
+                                    <input type="number" id="duration_mins" min="0" placeholder="ระบุนาที" required oninput="validateTime()">
+                                    <button type="button" id="btnMaxTime" class="btn-fill-max" onclick="fillMaxTime()" style="display:none;" title="ใช้เวลาสูงสุดตามหน่วยกิต">จัดเต็มเวลา</button>
+                                </div>
+                                <small id="timeError" style="color:var(--danger); display:none; font-weight:700; margin-top:10px;"><i class="fa-solid fa-circle-exclamation"></i> เวลาที่ระบุเกินกว่ากำหนด</small>
+                                <input type="hidden" id="max_allowed_time" value="0">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>หมายเหตุถึงฝ่ายวิชาการ (ถ้ามี)</label>
+                            <input type="text" id="remark" placeholder="ระบุความต้องการเพิ่มเติม เช่น ขอใช้ห้องปฏิบัติการคอมพิวเตอร์">
+                        </div>
+
+                        <button type="submit" class="btn-submit" id="btnSubmit">
+                            <i class="fa-solid fa-paper-plane"></i> บันทึกและส่งข้อมูล
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa-solid fa-clock-rotate-left" style="color:var(--text-dark);"></i>
+                    <h2 style="color:var(--text-dark);">ประวัติการแจ้งข้อมูล</h2>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="15%">รหัสวิชา</th>
+                                <th width="25%">ห้องสอบ</th>
+                                <th width="25%">รูปแบบ / ประเภท</th>
+                                <th width="15%" style="text-align:center;">ระยะเวลา</th>
+                                <th width="20%" style="text-align:center;">สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr><td colspan="5" style="text-align:center; padding:40px; color:#9ca3af;">กำลังโหลดข้อมูล...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://yysxrbuzieyyzgjcjotf.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_D-ILjG-lssNJy0n86-PB7A_oEk9YP-r'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = null;
+        let myPlans = [];
+        let sysSettings = {};
+        let isSystemOpen = false;
+
+        function loadSharedUI() {
+            const sessionStr = localStorage.getItem('kn_teacher_session');
+            if (!sessionStr) return window.location.href = 'index.html';
+            const user = JSON.parse(sessionStr);
+            document.getElementById('nav_fullname').innerText = user.full_name; 
+            document.getElementById('nav_code').innerText = user.teacher_code;
+            if (user.role === 'admin') {
+                document.getElementById('nav_user_box').classList.add('admin-theme'); 
+                document.getElementById('nav_profile_icon').className = 'fa-solid fa-shield-halved';
+                document.getElementById('nav_role_title').innerHTML = `ผู้ดูแลระบบ: <span style="color:var(--admin); font-weight:700;">${user.teacher_code}</span>`;
+            }
+            return user;
+        }
+
+        async function initPage() {
+            currentUser = loadSharedUI();
+            document.getElementById('main-content').style.display = 'block';
+            
+            const resSet = await supabaseClient.from('exam_settings').select('*').eq('id', 1).single();
+            if(resSet.data) {
+                sysSettings = resSet.data;
+                document.getElementById('display_exam_round').innerText = sysSettings.exam_round_name || 'ไม่ได้ระบุรอบสอบ';
+                document.getElementById('exam_round_name').value = sysSettings.exam_round_name || '';
+                updateTimerDisplay();
+                setInterval(updateTimerDisplay, 60000); // เช็คเวลาทุก 1 นาที
+            }
+
+            const sysTerm = await supabaseClient.from('system_settings').select('current_term').eq('id', 1).single();
+            if(sysTerm.data) document.getElementById('current_term').value = sysTerm.data.current_term;
+
+            await loadMySubjects();
+            loadExamHistory();
+            handleScheduleChange();
+        }
+
+        // ระบบจับเวลาเปิด-ปิดฟอร์ม
+        function updateTimerDisplay() {
+            const badge = document.getElementById('timer_display');
+            
+            if(!sysSettings.open_date && !sysSettings.close_date) { 
+                badge.innerHTML = '<i class="fa-solid fa-power-off"></i> ยังไม่ได้ตั้งเวลาเปิดระบบ'; 
+                badge.style.background = 'rgba(255,255,255,0.1)';
+                isSystemOpen = false;
+                manageFormState();
+                return; 
+            }
+            
+            const now = new Date(); 
+            const openDate = sysSettings.open_date ? new Date(sysSettings.open_date) : new Date('2000-01-01'); 
+            const closeDate = sysSettings.close_date ? new Date(sysSettings.close_date) : new Date('2099-01-01');
+            
+            if (now < openDate) { 
+                let diff = Math.ceil((openDate - now) / (1000 * 60 * 60 * 24)); 
+                badge.innerHTML = `<i class="fa-regular fa-clock"></i> เปิดระบบในอีก ${diff} วัน`;
+                badge.style.background = 'rgba(245, 158, 11, 0.2)'; 
+                badge.style.borderColor = 'rgba(245, 158, 11, 0.5)';
+                isSystemOpen = false;
+                manageFormState();
+            } 
+            else if (now >= openDate && now <= closeDate) { 
+                let diff = Math.ceil((closeDate - now) / (1000 * 60 * 60 * 24)); 
+                badge.innerHTML = `<i class="fa-solid fa-satellite-dish fa-beat"></i> เปิดรับข้อมูล (เหลือ ${diff} วัน)`;
+                badge.style.background = 'rgba(16, 185, 129, 0.2)'; 
+                badge.style.borderColor = 'rgba(16, 185, 129, 0.5)';
+                isSystemOpen = true;
+                manageFormState();
+            } 
+            else { 
+                badge.innerHTML = `<i class="fa-solid fa-lock"></i> หมดเวลาส่งข้อมูลแล้ว`; 
+                badge.style.background = 'rgba(239, 68, 68, 0.2)'; 
+                badge.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                isSystemOpen = false;
+                manageFormState();
+            }
+        }
+
+        // ปิดหรือเปิดการใช้งานปุ่มตามสถานะเวลา
+        function manageFormState() {
+            const btn = document.getElementById('btnSubmit');
+            const courseSelect = document.getElementById('course_select');
+            
+            if(!isSystemOpen && currentUser.role !== 'admin') {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-lock"></i> ระบบปิดรับข้อมูลแล้ว';
+                courseSelect.disabled = true;
+            } else {
+                courseSelect.disabled = false;
+                validateRooms(); // ให้ฟังก์ชัน validateRooms เป็นตัวตัดสินใจว่าจะเปิดปุ่ม Submit หรือไม่
+            }
+        }
+
+        function parseRoomsToArray(roomStr) {
+            let rooms = [];
+            let parts = roomStr.split(',');
+            for (let p of parts) {
+                p = p.trim();
+                if (p.includes('-')) {
+                    let [start, end] = p.split('-');
+                    let s = parseInt(start); let e = parseInt(end);
+                    if (!isNaN(s) && !isNaN(e) && s <= e) {
+                        for (let i = s; i <= e; i++) rooms.push(i.toString());
+                    }
+                } else if (p.length > 0) {
+                    rooms.push(p);
+                }
+            }
+            return rooms;
+        }
+
+        async function loadMySubjects() {
+            const term = document.getElementById('current_term').value;
+            const { data } = await supabaseClient
+                .from('teaching_plans')
+                .select(`course_code, credit, class_rooms, subjects (course_name)`)
+                .eq('teacher_code', currentUser.teacher_code)
+                .eq('term', term);
+
+            if(data && data.length > 0) {
+                myPlans = data;
+                let options = '<option value="">-- เลือกรายวิชา --</option>';
+                const uniqueCodes = [...new Set(data.map(item => item.course_code))];
+                
+                uniqueCodes.forEach(code => {
+                    const subInfo = data.find(s => s.course_code === code);
+                    const name = subInfo.subjects ? subInfo.subjects.course_name : 'ไม่ทราบชื่อ';
+                    options += `<option value="${code}">${code} ${name} (${subInfo.credit} หน่วยกิต)</option>`;
+                });
+                document.getElementById('course_select').innerHTML = options;
+            }
+        }
+
+        function handleCourseChange() {
+            const code = document.getElementById('course_select').value;
+            const roomSection = document.getElementById('room_section');
+            const roomBox = document.getElementById('room_checkboxes');
+            const btnMax = document.getElementById('btnMaxTime');
+            
+            if(!code) {
+                roomSection.style.display = 'none';
+                btnMax.style.display = 'none';
+                return;
+            }
+            
+            let allRooms = [];
+            let creditVal = 0;
+            const filteredPlans = myPlans.filter(s => s.course_code === code);
+            
+            filteredPlans.forEach(p => {
+                creditVal = p.credit;
+                allRooms = allRooms.concat(parseRoomsToArray(p.class_rooms));
+            });
+            
+            allRooms = [...new Set(allRooms)].sort((a,b) => parseInt(a) - parseInt(b));
+            
+            let cbHtml = '';
+            allRooms.forEach(r => {
+                cbHtml += `<label><input type="checkbox" class="room-chk" value="${r}" checked onchange="validateRooms()"> ห้อง ${r}</label>`;
+            });
+            
+            roomBox.innerHTML = cbHtml;
+            roomSection.style.display = 'block';
+
+            const maxMins = creditVal * 60;
+            document.getElementById('max_allowed_time').value = maxMins;
+            btnMax.innerText = `ใช้เต็มเวลา (${maxMins} นาที)`;
+            btnMax.style.display = 'block';
+            
+            validateTime();
+            validateRooms();
+        }
+
+        function fillMaxTime() {
+            const max = document.getElementById('max_allowed_time').value;
+            const durationInput = document.getElementById('duration_mins');
+            if(!durationInput.readOnly) {
+                durationInput.value = max;
+                validateTime();
+            }
+        }
+
+        function validateRooms() {
+            // ถ้าอยู่นอกเวลาทำการและไม่ใช่แอดมิน ให้ข้ามการเช็คนี้ไป (ล็อกปุ่มไว้เลย)
+            if(!isSystemOpen && currentUser.role !== 'admin') return false;
+
+            const checkedBoxes = document.querySelectorAll('.room-chk:checked');
+            const errorText = document.getElementById('roomError');
+            const btn = document.getElementById('btnSubmit');
+            const isNoExam = document.getElementById('schedule_type').value === 'ไม่มีการสอบ';
+            
+            if(!isNoExam && document.getElementById('course_select').value !== "" && checkedBoxes.length === 0) {
+                errorText.style.display = 'block';
+                btn.disabled = true;
+                return false;
+            } else {
+                errorText.style.display = 'none';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> บันทึกและส่งข้อมูล';
+                validateTime(); // เช็คเวลาต่อ
+                return true;
+            }
+        }
+
+        function handleScheduleChange() {
+            const sType = document.getElementById('schedule_type').value;
+            const medium = document.getElementById('exam_medium');
+            const duration = document.getElementById('duration_mins');
+            const btnMax = document.getElementById('btnMaxTime');
+            
+            if(sType === 'ในตารางจัดสอบ') {
+                medium.value = 'กระดาษ';
+                medium.disabled = true;
+                duration.readOnly = false;
+                duration.value = "";
+                if(document.getElementById('course_select').value) btnMax.style.display = 'block';
+            } else if(sType === 'ไม่มีการสอบ') {
+                medium.value = '';
+                medium.disabled = true;
+                duration.value = 0;
+                duration.readOnly = true;
+                btnMax.style.display = 'none';
+                document.getElementById('timeError').style.display = 'none';
+            } else {
+                medium.disabled = false;
+                duration.readOnly = false;
+                if(document.getElementById('course_select').value) btnMax.style.display = 'block';
+            }
+            validateRooms();
+        }
+
+        function validateTime() {
+            // ถ้าอยู่นอกเวลาทำการและไม่ใช่แอดมิน ล็อกปุ่ม
+            if(!isSystemOpen && currentUser.role !== 'admin') return;
+
+            const inputVal = parseInt(document.getElementById('duration_mins').value) || 0;
+            const maxVal = parseInt(document.getElementById('max_allowed_time').value) || 0;
+            const errorBox = document.getElementById('timeError');
+            const btn = document.getElementById('btnSubmit');
+            const hasRoomChecked = document.querySelectorAll('.room-chk:checked').length > 0;
+            const isNoExam = document.getElementById('schedule_type').value === 'ไม่มีการสอบ';
+
+            if(!isNoExam && inputVal > maxVal) {
+                errorBox.style.display = 'block';
+                btn.disabled = true;
+            } else if (!isNoExam && document.getElementById('course_select').value !== "" && !hasRoomChecked) {
+                btn.disabled = true;
+                errorBox.style.display = 'none';
+            } else {
+                errorBox.style.display = 'none';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> บันทึกและส่งข้อมูล';
+            }
+        }
+
+        async function submitExamRequest(e) {
+            e.preventDefault();
+            
+            if(!validateRooms()) return;
+
+            const btn = document.getElementById('btnSubmit');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกข้อมูล...'; 
+            btn.disabled = true;
+
+            const mediumVal = document.getElementById('schedule_type').value === 'ไม่มีการสอบ' ? null : document.getElementById('exam_medium').value;
+            const checkedRooms = Array.from(document.querySelectorAll('.room-chk:checked')).map(cb => cb.value).join(', ');
+
+            const payload = {
+                teacher_code: currentUser.teacher_code,
+                course_code: document.getElementById('course_select').value,
+                term: document.getElementById('current_term').value,
+                exam_round: document.getElementById('exam_round_name').value,
+                schedule_type: document.getElementById('schedule_type').value,
+                exam_medium: mediumVal,
+                duration_mins: parseInt(document.getElementById('duration_mins').value) || 0,
+                target_rooms: checkedRooms,
+                remark: document.getElementById('remark').value.trim()
+            };
+
+            const { error } = await supabaseClient.from('exam_requests').insert([payload]);
+
+            if(error) {
+                alert("เกิดข้อผิดพลาด: " + error.message);
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> บันทึกและส่งข้อมูล'; btn.disabled = false;
+            } else {
+                loadExamHistory();
+                document.getElementById('examForm').reset();
+                document.getElementById('room_section').style.display = 'none';
+                document.getElementById('btnMaxTime').style.display = 'none';
+                handleScheduleChange();
+                
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> บันทึกและส่งข้อมูล'; btn.disabled = false;
+                
+                if(mediumVal === 'กระดาษ') {
+                    document.getElementById('printSuggestModal').classList.add('active');
+                } else {
+                    alert("บันทึกข้อมูลเรียบร้อยครับ");
+                }
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('printSuggestModal').classList.remove('active');
+        }
+
+        async function loadExamHistory() {
+            const { data, error } = await supabaseClient
+                .from('exam_requests')
+                .select('*')
+                .eq('teacher_code', currentUser.teacher_code)
+                .order('created_at', { ascending: false });
+
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+
+            if(!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:#9ca3af;">ไม่พบข้อมูลประวัติ</td></tr>';
+                return;
+            }
+
+            data.forEach(item => {
+                let statusHtml = item.status === 'pending' ? `<span class="status-badge status-pending"><i class="fa-solid fa-clock"></i> รอดำเนินการ</span>` : `<span class="status-badge status-approved"><i class="fa-solid fa-check"></i> จัดตารางแล้ว</span>`;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:800; color:var(--primary); font-size:1.05rem;">${item.course_code}</td>
+                    <td style="font-weight:700; color:var(--text-dark);">${item.target_rooms || '-'}</td>
+                    <td>
+                        <div style="font-weight:700;">${item.schedule_type}</div>
+                        <div style="font-size:0.85rem; color:var(--text-muted); margin-top:5px;">${item.exam_medium || ''}</div>
+                    </td>
+                    <td style="text-align:center; font-weight:800; color:var(--danger); font-size:1.05rem;">${item.duration_mins > 0 ? item.duration_mins + ' นาที' : '-'}</td>
+                    <td style="text-align:center;">${statusHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.onload = initPage;
+    </script>
+</body>
+</html>

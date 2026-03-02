@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สั่งถ่ายเอกสาร/ปริ้นงาน - KN Educator Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --primary: #1f8ffd; --primary-dark: #0b5fa6; --primary-light: #e8f4fd;
+            --admin: #8e44ad; --admin-dark: #732d91; --admin-light: #f4e8f9;
+            --bg-gray: #f3f4f6; --surface: #ffffff;
+            --text-dark: #1f2937; --text-muted: #6b7280;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --border-color: #e5e7eb;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Anuphan', sans-serif; }
+        body { background-color: var(--bg-gray); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; display: flex; flex-direction: column;}
+
+        /* Navbar มาตรฐาน */
+        .top-navbar { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 90; box-shadow: 0 2px 10px rgba(0,0,0,0.02);}
+        .navbar-left { display: flex; align-items: center; gap: 20px; }
+        .btn-back { background: var(--bg-gray); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-family: 'Anuphan'; font-weight: 700; font-size: 0.95rem; color: var(--text-dark); display: flex; align-items: center; gap: 8px; transition: 0.2s; text-decoration: none;}
+        .btn-back:hover { background: #e5e7eb; }
+        .navbar-left h2 { margin: 0; font-size: 1.3rem; color: var(--text-dark); font-weight: 800; border-left: 2px solid var(--border-color); padding-left: 20px;}
+        
+        .nav-user { display: flex; align-items: center; gap: 15px; padding: 5px 15px; background: var(--primary-light); border-radius: 50px;}
+        .nav-user.admin-theme { background: var(--admin-light); }
+        .nav-user-info { text-align: right; line-height: 1.2; }
+        .nav-user-id { font-size: 0.8rem; color: var(--primary); font-weight: 700;}
+        .nav-user.admin-theme .nav-user-id { color: var(--admin); }
+        .nav-user-name { font-size: 1rem; color: var(--text-dark); font-weight: 800; }
+        .nav-user i { font-size: 2rem; color: var(--primary); }
+        .nav-user.admin-theme i { color: var(--admin); }
+
+        /* Content Area */
+        .main-wrapper { flex: 1; width: 100%; display: flex; flex-direction: column;}
+        .content { padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; }
+        
+        .sys-banner { background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%); color: white; border-radius: 16px; padding: 25px 35px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 20px rgba(31,143,253,0.15);}
+        .sys-banner h2 { margin: 0; font-size: 1.5rem; font-weight: 800;}
+        .sys-banner p { margin: 8px 0 0 0; opacity: 0.9; font-size: 1rem; }
+
+        .card { background: var(--surface); border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid var(--border-color); margin-bottom: 40px; overflow: hidden; }
+        .card-header { background: #fdfdfd; padding: 30px 40px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 20px;}
+        .card-header i { font-size: 2rem; color: var(--primary); }
+        .card-header h2 { font-size: 1.5rem; font-weight: 800; color: var(--text-dark); margin:0;}
+        
+        .card-body { padding: 40px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 25px; margin-bottom: 25px; }
+        
+        .input-group { margin-bottom: 25px; }
+        .input-group label { display: block; font-weight: 800; margin-bottom: 10px; color: var(--text-dark); font-size: 1rem; }
+        .input-group input, .input-group select { width: 100%; padding: 15px 20px; border: 1.5px solid #d1d5db; border-radius: 12px; font-size: 1rem; transition: 0.3s; background: #f9fafb; font-family: 'Anuphan'; outline: none;}
+        .input-group input:focus, .input-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(31,143,253,0.15); background: white; }
+
+        .btn-submit { padding: 18px 30px; background: var(--primary); color: white; border: none; border-radius: 16px; font-size: 1.15rem; font-weight: 800; cursor: pointer; transition: 0.3s; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 10px 20px rgba(31,143,253,0.25);}
+        .btn-submit:hover { background: var(--primary-dark); transform: translateY(-3px); box-shadow: 0 15px 25px rgba(31,143,253,0.3);}
+
+        /* Timeline Cards */
+        .history-title { font-size: 1.4rem; font-weight: 800; color: var(--text-dark); margin-bottom: 25px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px;}
+        .timeline-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
+        
+        .print-card { background: white; border-radius: 20px; border: 1px solid var(--border-color); padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: 0.3s; position: relative;}
+        .print-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); border-color: var(--primary-light);}
+        
+        .p-title { font-size: 1.2rem; font-weight: 800; color: var(--text-dark); margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;}
+        .p-detail { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 8px; display: flex; justify-content: space-between;}
+        .p-val { font-weight: 800; color: var(--primary-dark); }
+        
+        .timeline-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; padding-top: 20px; border-top: 1px dashed var(--border-color); position: relative;}
+        .timeline-step { display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 1; flex: 1;}
+        .t-icon { width: 35px; height: 35px; border-radius: 50%; background: #e5e7eb; color: #9ca3af; display: flex; justify-content: center; align-items: center; font-size: 1rem; transition: 0.3s;}
+        .t-text { font-size: 0.8rem; font-weight: 800; color: #9ca3af; text-align: center;}
+        
+        .timeline-line { position: absolute; top: 38px; left: 15%; right: 15%; height: 3px; background: #e5e7eb; z-index: 0; }
+
+        /* สีสถานะ Timeline */
+        .step-active .t-icon { background: var(--primary); color: white; box-shadow: 0 0 0 5px var(--primary-light);}
+        .step-active .t-text { color: var(--primary); }
+        .step-done .t-icon { background: var(--success); color: white; }
+        .step-done .t-text { color: var(--success); }
+        
+        .status-badge-reject { position: absolute; top: 20px; right: 20px; background: #fee2e2; color: var(--danger); padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; border: 1px solid #fecaca;}
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 9999; opacity: 0; visibility: hidden; transition: 0.3s;}
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-box { background: white; width: 90%; max-width: 450px; border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); transform: translateY(20px); transition: 0.3s; }
+        .modal-overlay.active .modal-box { transform: translateY(0); }
+        .modal-icon { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 25px auto; }
+        .modal-success .modal-icon { background: #d1fae5; color: var(--success); }
+        .modal-btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; font-family: 'Anuphan'; font-size: 1.1rem;}
+
+        @media (max-width: 900px) {
+            .grid-3, .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-box" id="modalBox">
+            <div class="modal-icon modal-success" id="modalIcon"><i class="fa-solid fa-circle-check"></i></div>
+            <h3 id="modalTitle" style="font-size:1.6rem; font-weight:800; margin-bottom:15px; color:var(--text-dark);">สำเร็จ</h3>
+            <p id="modalText" style="color:var(--text-muted); margin-bottom:30px; line-height: 1.6; font-size:1.05rem;">ข้อความ</p>
+            <button class="modal-btn" onclick="document.getElementById('customModal').classList.remove('active')">ตกลง</button>
+        </div>
+    </div>
+
+    <div class="top-navbar">
+        <div class="navbar-left">
+            <a href="dashboard.html" class="btn-back">
+                <i class="fa-solid fa-arrow-left"></i> กลับหน้าหลัก
+            </a>
+            <h2 id="navbar_page_title">KN Educator Hub | ศูนย์ถ่ายเอกสารอัจฉริยะ</h2>
+        </div>
+        <div class="nav-user" id="nav_user_box">
+            <div class="nav-user-info">
+                <div class="nav-user-id" id="nav_role_title">รหัส: <span id="nav_code">กำลังโหลด...</span></div>
+                <div class="nav-user-name" id="nav_fullname">กำลังโหลดข้อมูล...</div>
+            </div>
+            <i class="fa-solid fa-circle-user" id="nav_profile_icon"></i>
+        </div>
+    </div>
+
+    <div class="main-wrapper" id="main-wrapper">
+        <div class="content" id="main-content" style="display: none;">
+            
+            <div class="sys-banner">
+                <div>
+                    <h2>ศูนย์บริการสั่งถ่ายเอกสารและชีทเรียน</h2>
+                    <p>ระบบส่งไฟล์งานเพื่อสั่งพิมพ์และติดตามสถานะแบบเรียลไทม์</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa-solid fa-print"></i>
+                    <div>
+                        <h2>ส่งคำขอสั่งพิมพ์เอกสาร</h2>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form id="printForm" onsubmit="submitPrintRequest(event)">
+                        
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label>ชื่อเอกสาร <span class="text-danger">*</span></label>
+                                <input type="text" id="title" placeholder="เช่น ชีทติวคณิตศาสตร์ ม.3 เรื่องสมการ" required>
+                            </div>
+                            <div class="input-group">
+                                <label>ประเภทเอกสาร <span class="text-danger">*</span></label>
+                                <select id="doc_type" required>
+                                    <option value="">-- เลือกประเภท --</option>
+                                    <option value="ชีทประกอบการเรียน">ชีทประกอบการเรียน</option>
+                                    <option value="ใบงาน / แบบฝึกหัด">ใบงาน / แบบฝึกหัด</option>
+                                    <option value="ข้อสอบกลางภาค / ปลายภาค" style="color:var(--danger); font-weight:800;">ข้อสอบกลางภาค / ปลายภาค (ความลับสูง)</option>
+                                    <option value="เอกสารประเมิน / ประชุม">เอกสารประเมิน / ประชุม</option>
+                                    <option value="อื่นๆ">อื่นๆ</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>ลิงก์ไฟล์เอกสาร (PDF หรือ Google Drive) <span class="text-danger">*</span></label>
+                            <input type="url" id="file_url" placeholder="วางลิงก์ไฟล์ที่แชร์แบบสิทธิ์ 'ทุกคนที่มีลิงก์ดูได้'" required>
+                        </div>
+
+                        <div class="grid-3">
+                            <div class="input-group">
+                                <label>จำนวนชุด (Copies) <span class="text-danger">*</span></label>
+                                <input type="number" min="1" id="copy_count" placeholder="ระบุจำนวน" required>
+                            </div>
+                            <div class="input-group">
+                                <label>รูปแบบการปริ้น <span class="text-danger">*</span></label>
+                                <select id="print_format" required>
+                                    <option value="ปริ้น 1 หน้า (หน้าเดียว)">ปริ้น 1 หน้า (หน้าเดียว)</option>
+                                    <option value="ปริ้น 2 หน้า (หน้า-หลัง)">ปริ้น 2 หน้า (หน้า-หลัง)</option>
+                                    <option value="ปริ้น 2 หน้า (พลิกขอบสั้น)">ปริ้น 2 หน้า (พลิกขอบสั้น / พลิกขึ้น)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>หน้าที่ต้องการปริ้น <span class="text-danger">*</span></label>
+                                <input type="text" id="page_range" placeholder="เช่น ทั้งหมด หรือ 1-10, 15" value="ทั้งหมด" required>
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label>ระบุหน้าสำหรับ ปริ้นสี (ถ้ามี)</label>
+                                <input type="text" id="color_pages" placeholder="เช่น ปกหน้า 1, หรือ 5-7 (เว้นว่างถ้าไม่มี)">
+                            </div>
+                            <div class="input-group">
+                                <label>ระบุหน้าสำหรับ ปริ้นขาวดำ (ถ้ามี)</label>
+                                <input type="text" id="bw_pages" placeholder="เช่น 2-4, 8-10 (เว้นว่างถ้าทั้งหมดเป็นขาวดำ)">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>จุดประสงค์การใช้งาน / หมายเหตุเพิ่มเติม</label>
+                            <input type="text" id="purpose" placeholder="เช่น ใช้สอนห้อง 301-305 ในวันพุธนี้ เข้าเล่มแม็กมุมซ้ายบนให้ด้วยครับ">
+                        </div>
+
+                        <button type="submit" class="btn-submit" id="btnSubmit">
+                            <i class="fa-solid fa-paper-plane"></i> ยืนยันการส่งคำขอถ่ายเอกสาร
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="history-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);"></i> ติดตามสถานะงานของคุณ</div>
+            
+            <div class="timeline-grid" id="printHistoryContainer">
+                <div style="grid-column: 1 / -1; text-align:center; padding:50px; color:#9ca3af;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br>กำลังโหลดข้อมูล...</div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://yysxrbuzieyyzgjcjotf.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_D-ILjG-lssNJy0n86-PB7A_oEk9YP-r'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = null;
+
+        function loadSharedUI() {
+            const sessionStr = localStorage.getItem('kn_teacher_session');
+            if (!sessionStr) return window.location.href = 'index.html';
+            const user = JSON.parse(sessionStr);
+            document.getElementById('nav_fullname').innerText = user.full_name; 
+            document.getElementById('nav_code').innerText = user.teacher_code;
+            if (user.role === 'admin') {
+                document.getElementById('nav_user_box').classList.add('admin-theme');
+                document.getElementById('nav_profile_icon').className = 'fa-solid fa-shield-halved';
+                document.getElementById('nav_role_title').innerHTML = `ผู้ดูแลระบบ: <span style="color:var(--admin); font-weight:700;">${user.teacher_code}</span>`;
+            }
+            return user;
+        }
+
+        function formatDateThai(dateStr) {
+            const date = new Date(dateStr); const months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+            return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear() + 543} เวลา ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')} น.`;
+        }
+
+        async function initPage() {
+            currentUser = loadSharedUI();
+            document.getElementById('main-content').style.display = 'block';
+            loadPrintHistory();
+        }
+
+        async function submitPrintRequest(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งคำขอ...'; btn.disabled = true;
+
+            const payload = {
+                teacher_code: currentUser.teacher_code,
+                title: document.getElementById('title').value.trim(),
+                doc_type: document.getElementById('doc_type').value,
+                purpose: document.getElementById('purpose').value.trim(),
+                file_url: document.getElementById('file_url').value.trim(),
+                copy_count: parseInt(document.getElementById('copy_count').value),
+                print_format: document.getElementById('print_format').value,
+                page_range: document.getElementById('page_range').value.trim(),
+                color_pages: document.getElementById('color_pages').value.trim() || null,
+                bw_pages: document.getElementById('bw_pages').value.trim() || null,
+                status: 'pending'
+            };
+
+            const { error } = await supabaseClient.from('print_requests').insert([payload]);
+
+            if (error) {
+                alert("เกิดข้อผิดพลาด: " + error.message);
+            } else {
+                document.getElementById('customModal').classList.add('active');
+                document.getElementById('modalText').innerText = "คำขอสั่งปริ้นเอกสารของคุณถูกส่งไปยังศูนย์ถ่ายเอกสารเรียบร้อยแล้วครับ";
+                document.getElementById('printForm').reset();
+                document.getElementById('page_range').value = 'ทั้งหมด';
+                loadPrintHistory();
+            }
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ยืนยันการส่งคำขอถ่ายเอกสาร'; btn.disabled = false;
+        }
+
+        async function loadPrintHistory() {
+            const { data, error } = await supabaseClient
+                .from('print_requests')
+                .select('*')
+                .eq('teacher_code', currentUser.teacher_code)
+                .order('created_at', { ascending: false });
+
+            const container = document.getElementById('printHistoryContainer');
+            container.innerHTML = '';
+
+            if (error || !data || data.length === 0) {
+                container.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:50px; background:white; border-radius:20px; border:1px dashed #d1d5db;"><h4 style="color:var(--text-muted); margin:0;">คุณยังไม่เคยส่งคำขอสั่งพิมพ์งาน</h4></div>`;
+                return;
+            }
+
+            data.forEach(item => {
+                let s1='step-active', s2='', s3='', s4='';
+                if(item.status === 'approved') { s1='step-done'; s2='step-active'; }
+                if(item.status === 'processing') { s1='step-done'; s2='step-done'; s3='step-active'; }
+                if(item.status === 'completed') { s1='step-done'; s2='step-done'; s3='step-done'; s4='step-done'; }
+                
+                let rejectBadge = item.status === 'rejected' ? `<div class="status-badge-reject"><i class="fa-solid fa-xmark"></i> ไม่อนุมัติ</div>` : '';
+                
+                let timelineHtml = item.status === 'rejected' 
+                    ? `<div style="margin-top:25px; padding:15px; background:#fee2e2; color:var(--danger); border-radius:12px; font-size:0.95rem;"><b>หมายเหตุ:</b> ${item.remark || 'ถูกปฏิเสธโดยผู้ดูแลระบบ'}</div>`
+                    : `
+                    <div class="timeline-bar">
+                        <div class="timeline-line"></div>
+                        <div class="timeline-step ${s1}"><div class="t-icon"><i class="fa-solid fa-clock"></i></div><div class="t-text">รออนุมัติ</div></div>
+                        <div class="timeline-step ${s2}"><div class="t-icon"><i class="fa-solid fa-check"></i></div><div class="t-text">รับเรื่อง</div></div>
+                        <div class="timeline-step ${s3}"><div class="t-icon"><i class="fa-solid fa-print"></i></div><div class="t-text">กำลังปริ้น</div></div>
+                        <div class="timeline-step ${s4}"><div class="t-icon"><i class="fa-solid fa-box-open"></i></div><div class="t-text">เสร็จสิ้น</div></div>
+                    </div>`;
+
+                const card = document.createElement('div');
+                card.className = 'print-card';
+                card.innerHTML = `
+                    ${rejectBadge}
+                    <div style="font-size:0.85rem; font-weight:800; color:var(--primary); margin-bottom:8px; text-transform:uppercase;">${item.doc_type}</div>
+                    <div class="p-title">${item.title}</div>
+                    
+                    <div class="p-detail"><span>จำนวน:</span> <span class="p-val">${item.copy_count} ชุด</span></div>
+                    <div class="p-detail"><span>รูปแบบ:</span> <span class="p-val">${item.print_format}</span></div>
+                    <div class="p-detail"><span>หน้าที่ปริ้น:</span> <span class="p-val">${item.page_range}</span></div>
+                    
+                    ${item.color_pages ? `<div class="p-detail"><span>หน้าสี:</span> <span class="p-val" style="color:var(--warning);">${item.color_pages}</span></div>` : ''}
+                    
+                    <div style="font-size:0.8rem; color:#9ca3af; margin-top:20px; font-weight:600;"><i class="fa-regular fa-clock"></i> ${formatDateThai(item.created_at)}</div>
+                    
+                    ${timelineHtml}
+                    
+                    ${item.status === 'completed' && item.remark ? `<div style="margin-top:20px; font-size:0.95rem; color:var(--success); font-weight:800; background:#d1fae5; padding:15px; border-radius:12px;">ข้อความจากแอดมิน: ${item.remark}</div>` : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        window.onload = initPage;
+    </script>
+</body>
+</html>
