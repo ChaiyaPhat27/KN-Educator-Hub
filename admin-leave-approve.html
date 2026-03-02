@@ -222,6 +222,9 @@
             
             document.getElementById('nav_fullname').innerText = user.full_name;
             document.getElementById('nav_code').innerText = user.teacher_code;
+            // ทำตัวย่อชื่อ
+            const initials = user.full_name.trim().charAt(0);
+            document.getElementById('nav_initial').innerText = initials;
             
             if (user.role === 'admin') {
                 document.getElementById('nav_user_box').classList.add('admin-theme');

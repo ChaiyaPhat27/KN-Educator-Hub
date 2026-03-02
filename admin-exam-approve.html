@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ศูนย์อนุมัติและติดตามการจัดสอบ - KN Educator Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --primary: #1f8ffd; --admin: #8e44ad; --admin-dark: #732d91; --admin-light: #f4e8f9;
+            --bg-gray: #f3f4f6; --surface: #ffffff; --text-dark: #1f2937; --text-muted: #6b7280;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --border-color: #e5e7eb;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Anuphan', sans-serif; }
+        body { background-color: var(--bg-gray); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column; animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        body.fade-out { animation: fadeOut 0.3s ease-in forwards; }
+        @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
+
+        /* Navbar */
+        .top-navbar { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 90;}
+        .navbar-left { display: flex; align-items: center; gap: 20px; }
+        .btn-back { background: var(--bg-gray); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.95rem; color: var(--text-dark); display: flex; align-items: center; gap: 8px; text-decoration: none; transition: 0.2s;}
+        .btn-back:hover { background: #e5e7eb; }
+        .navbar-left h2 { margin: 0; font-size: 1.3rem; color: var(--admin); font-weight: 800; border-left: 2px solid var(--border-color); padding-left: 20px;}
+        .nav-user { display: flex; align-items: center; gap: 15px; padding: 5px 15px; background: var(--admin-light); border-radius: 50px;}
+        .nav-user-info { text-align: right; line-height: 1.2; }
+        .nav-user-id { font-size: 0.8rem; color: var(--admin); font-weight: 700;}
+        .nav-user-name { font-size: 1rem; color: var(--text-dark); font-weight: 800; }
+        .nav-user i { font-size: 2rem; color: var(--admin); }
+
+        .content { padding: 30px 40px; max-width: 1400px; margin: 0 auto; width: 100%; flex: 1; display: flex; flex-direction: column;}
+
+        .sys-banner { background: linear-gradient(135deg, var(--admin) 0%, #a855f7 100%); color: white; border-radius: 16px; padding: 25px 35px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 20px rgba(142,68,173,0.15);}
+        .sys-banner h2 { margin: 0; font-size: 1.5rem; font-weight: 800;}
+        .sys-banner p { margin: 8px 0 0 0; opacity: 0.9; font-size: 1rem; }
+
+        /* Progress Dashboard */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; margin-bottom: 30px; }
+        .card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); border: 1px solid var(--border-color); }
+        .card-title { font-size: 1.2rem; font-weight: 800; color: var(--text-dark); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;}
+        
+        .progress-circle-container { text-align: center; }
+        .progress-text { font-size: 3rem; font-weight: 800; color: var(--admin); line-height: 1; margin-bottom: 10px;}
+        .progress-desc { color: var(--text-muted); font-size: 1rem; font-weight: 600;}
+
+        .dept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;}
+        .dept-card { background: #f9fafb; border: 1px solid var(--border-color); padding: 15px; border-radius: 12px;}
+        .dept-name { font-weight: 800; font-size: 0.9rem; color: var(--text-dark); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .progress-bar-bg { background: #e5e7eb; height: 8px; border-radius: 10px; overflow: hidden; margin-bottom: 8px;}
+        .progress-bar-fill { background: var(--admin); height: 100%; border-radius: 10px; transition: width 0.5s ease;}
+        .dept-stats { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--text-muted);}
+
+        /* Tabs */
+        .tabs-container { display: flex; background: var(--surface); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border-color); margin-bottom: 25px; padding: 8px;}
+        .tab-btn { flex: 1; padding: 15px 20px; text-align: center; font-size: 1.05rem; font-weight: 800; color: var(--text-muted); cursor: pointer; transition: 0.3s; border-radius: 12px; margin: 0 5px;}
+        .tab-btn:hover { background: var(--bg-gray); color: var(--admin); }
+        .tab-btn.active { color: white; background: var(--admin); box-shadow: 0 4px 12px rgba(142,68,173,0.3); }
+
+        .tab-pane { display: none; animation: fadeIn 0.4s; }
+        .tab-pane.active { display: block; }
+
+        /* Table */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        table th { background: #f9fafb; color: var(--text-muted); font-weight: 800; padding: 15px 20px; text-align: left; font-size: 0.9rem; text-transform: uppercase; border-bottom: 2px solid var(--border-color);}
+        table td { padding: 15px 20px; border-bottom: 1px dashed var(--border-color); font-size: 0.95rem; vertical-align: top; color: var(--text-dark);}
+        
+        .badge { padding: 5px 12px; border-radius: 30px; font-size: 0.8rem; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;}
+        .b-success { background: #d1fae5; color: var(--success); }
+        .b-warning { background: #fef3c7; color: var(--warning); }
+        .b-danger { background: #fee2e2; color: var(--danger); }
+        .b-gray { background: #f3f4f6; color: var(--text-muted); }
+
+        .btn-approve { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.2s; font-family: 'Anuphan'; font-size: 0.9rem;}
+        .btn-approve:hover { background: #059669; }
+        .btn-reject { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.2s; font-family: 'Anuphan'; font-size: 0.9rem;}
+        
+        .conflict-row { background: #fef2f2 !important; border-left: 4px solid var(--danger); }
+
+        @media (max-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div class="top-navbar">
+        <div class="navbar-left">
+            <a href="dashboard.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> กลับหน้าหลัก</a>
+            <h2>KN Educator Hub | ศูนย์ตรวจสอบและอนุมัติการจัดสอบ</h2>
+        </div>
+        <div class="nav-user" id="nav_user_box">
+            <div class="nav-user-info">
+                <div class="nav-user-id">ผู้ดูแลระบบ: <span id="nav_code">กำลังโหลด...</span></div>
+                <div class="nav-user-name" id="nav_fullname">...</div>
+            </div>
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="sys-banner">
+            <div>
+                <h2 id="display_exam_round">กำลังดึงข้อมูลรอบสอบ...</h2>
+                <p>ตรวจสอบ ติดตามสถานะการส่งข้อมูล และอนุมัติรายวิชาก่อนนำไปจัดตารางส่วนกลาง</p>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-chart-pie"></i> ภาพรวมการส่งข้อมูลทั้งโรงเรียน</div>
+                <div class="progress-circle-container">
+                    <div class="progress-text" id="overall_percent">0%</div>
+                    <div class="progress-desc">แจ้งจัดสอบแล้ว <span id="overall_submitted" style="color:var(--text-dark);">0</span> / <span id="overall_total">0</span> รายวิชา</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-chart-column"></i> สถิติแยกตามกลุ่มสาระการเรียนรู้</div>
+                <div class="dept-grid" id="deptStatsContainer">
+                    <div style="color:var(--text-muted); font-size:0.9rem;">กำลังประมวลผลข้อมูล...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs-container">
+            <div class="tab-btn active" onclick="switchTab('tab-tracking', this)"><i class="fa-solid fa-users-viewfinder"></i> ติดตามการส่งข้อมูลของครู</div>
+            <div class="tab-btn" onclick="switchTab('tab-approve', this)"><i class="fa-solid fa-clipboard-check"></i> พิจารณาอนุมัติวิชาสอบ</div>
+            <div class="tab-btn" onclick="switchTab('tab-approved', this)"><i class="fa-solid fa-check-double"></i> วิชาที่พร้อมจัดลงตาราง</div>
+        </div>
+
+        <div id="tab-tracking" class="tab-pane active">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div class="card-title" style="margin: 0; border: none; padding: 0;"><i class="fa-solid fa-list-ul"></i> รายชื่อบุคลากรและสถานะการส่งข้อมูล</div>
+                    <input type="text" id="searchTeacher" placeholder="ค้นหาชื่อ หรือ กลุ่มสาระ..." style="padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border-color); font-family: 'Anuphan'; outline: none;" onkeyup="filterTrackingTable()">
+                </div>
+                <div class="table-responsive" style="max-height: 600px;">
+                    <table id="trackingTable">
+                        <thead>
+                            <tr>
+                                <th>รหัส</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>กลุ่มสาระการเรียนรู้</th>
+                                <th style="text-align:center;">วิชาในแผนการสอน</th>
+                                <th style="text-align:center;">แจ้งสอบแล้ว</th>
+                                <th style="text-align:center;">สถานะ</th>
+                                <th>รายละเอียดที่ยังขาด</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trackingBody">
+                            <tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-muted);">กำลังโหลดข้อมูล...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-approve" class="tab-pane">
+            <div class="card">
+                <div class="card-title" style="border: none; padding: 0;"><i class="fa-solid fa-tasks"></i> รายการคำขอที่รอการตรวจสอบ</div>
+                <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:20px;">ระบบได้ทำการจัดกลุ่มวิชาเดียวกันไว้ด้วยกัน หากมีแถบสีแดงแสดงว่าเวลาสอบที่ครูแจ้งมาไม่ตรงกัน</p>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>รหัสวิชา / ชื่อวิชา</th>
+                                <th>ผู้สอน</th>
+                                <th>รูปแบบ / ห้องสอบ</th>
+                                <th style="text-align:center;">ระยะเวลา</th>
+                                <th style="text-align:center;">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approveBody">
+                            <tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-muted);">กำลังโหลดข้อมูล...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-approved" class="tab-pane">
+            <div class="card">
+                <div class="card-title" style="border: none; padding: 0;"><i class="fa-solid fa-box-open"></i> คลังวิชาที่พร้อมนำไปจัดตารางส่วนกลาง</div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>รหัสวิชา</th>
+                                <th>ชื่อวิชา</th>
+                                <th>รูปแบบการสอบ</th>
+                                <th>เป้าหมายห้องสอบ</th>
+                                <th style="text-align:center;">ระยะเวลา(นาที)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approvedBody">
+                            <tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-muted);">กำลังโหลดข้อมูล...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Transition Links
+        document.addEventListener('DOMContentLoaded', () => {
+            const links = document.querySelectorAll('a[href]');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href && href !== '#' && !href.startsWith('javascript:')) {
+                        e.preventDefault(); document.body.classList.add('fade-out'); 
+                        setTimeout(() => { window.location.href = href; }, 300);
+                    }
+                });
+            });
+        });
+
+        const SUPABASE_URL = 'https://yysxrbuzieyyzgjcjotf.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_D-ILjG-lssNJy0n86-PB7A_oEk9YP-r'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentTerm = "";
+        let dbTeachers = [];
+        let dbSubjects = [];
+        let allPlans = [];
+        let allRequests = [];
+
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active'); element.classList.add('active');
+        }
+
+        async function initAdmin() {
+            const sessionStr = localStorage.getItem('kn_teacher_session');
+            if (!sessionStr) return window.location.href = 'index.html';
+            const user = JSON.parse(sessionStr);
+            if (user.role !== 'admin') return window.location.href = 'dashboard.html';
+
+            document.getElementById('nav_fullname').innerText = user.full_name;
+            document.getElementById('nav_code').innerText = user.teacher_code;
+            // ทำตัวย่อชื่อ
+            const initials = user.full_name.trim().charAt(0);
+            document.getElementById('nav_initial').innerText = initials;
+
+            const [set1, set2, teachRes, subjRes] = await Promise.all([
+                supabaseClient.from('exam_settings').select('*').eq('id',1).single(),
+                supabaseClient.from('system_settings').select('current_term').eq('id',1).single(),
+                supabaseClient.from('teachers').select('*').order('department'),
+                supabaseClient.from('subjects').select('course_code, course_name')
+            ]);
+            
+            if(set1.data) document.getElementById('display_exam_round').innerText = set1.data.exam_round_name;
+            if(set2.data) currentTerm = set2.data.current_term;
+            if(teachRes.data) dbTeachers = teachRes.data;
+            if(subjRes.data) dbSubjects = subjRes.data;
+
+            await loadTrackingAndApprovalData();
+        }
+
+        function getSubjectName(code) {
+            const f = dbSubjects.find(s => s.course_code === code);
+            return f ? f.course_name : 'ไม่ทราบชื่อ';
+        }
+
+        async function loadTrackingAndApprovalData() {
+            // ดึงแผนการสอนทั้งหมดในเทอมนี้
+            const { data: plans } = await supabaseClient.from('teaching_plans').select('teacher_code, course_code').eq('term', currentTerm);
+            allPlans = plans || [];
+
+            // ดึงคำขอจัดสอบทั้งหมดในเทอมนี้
+            const { data: reqs } = await supabaseClient.from('exam_requests').select('*').eq('term', currentTerm);
+            allRequests = reqs || [];
+
+            processTrackingData();
+            processApprovalData();
+        }
+
+        let trackingList = [];
+        function processTrackingData() {
+            let totalExpected = 0;
+            let totalSubmitted = 0;
+            let deptStats = {};
+
+            trackingList = [];
+
+            dbTeachers.forEach(teacher => {
+                // หารายวิชาที่ไม่ซ้ำกันที่ครูคนนี้สอน
+                const tPlans = allPlans.filter(p => p.teacher_code === teacher.teacher_code);
+                const uniqueCoursesExpected = [...new Set(tPlans.map(p => p.course_code))];
+                
+                // หารายวิชาที่ครูคนนี้ส่งคำขอสอบมาแล้ว
+                const tReqs = allRequests.filter(r => r.teacher_code === teacher.teacher_code);
+                const uniqueCoursesSubmitted = [...new Set(tReqs.map(r => r.course_code))];
+
+                let missingCourses = uniqueCoursesExpected.filter(c => !uniqueCoursesSubmitted.includes(c));
+
+                if(uniqueCoursesExpected.length > 0) {
+                    totalExpected += uniqueCoursesExpected.length;
+                    totalSubmitted += uniqueCoursesSubmitted.length;
+
+                    const dept = teacher.department || 'ไม่ได้ระบุหมวด';
+                    if(!deptStats[dept]) deptStats[dept] = { expected: 0, submitted: 0 };
+                    deptStats[dept].expected += uniqueCoursesExpected.length;
+                    deptStats[dept].submitted += uniqueCoursesSubmitted.length;
+
+                    trackingList.push({
+                        ...teacher,
+                        expectedCount: uniqueCoursesExpected.length,
+                        submittedCount: uniqueCoursesSubmitted.length,
+                        missing: missingCourses
+                    });
+                }
+            });
+
+            // Render Overall Progress
+            const overallPercent = totalExpected === 0 ? 0 : Math.round((totalSubmitted / totalExpected) * 100);
+            document.getElementById('overall_percent').innerText = `${overallPercent}%`;
+            document.getElementById('overall_submitted').innerText = totalSubmitted;
+            document.getElementById('overall_total').innerText = totalExpected;
+
+            // Render Dept Progress
+            const deptContainer = document.getElementById('deptStatsContainer');
+            deptContainer.innerHTML = '';
+            
+            Object.keys(deptStats).sort().forEach(dept => {
+                const stat = deptStats[dept];
+                const pct = stat.expected === 0 ? 0 : Math.round((stat.submitted / stat.expected) * 100);
+                const color = pct === 100 ? 'var(--success)' : (pct > 50 ? 'var(--primary)' : 'var(--warning)');
+                
+                deptContainer.innerHTML += `
+                    <div class="dept-card">
+                        <div class="dept-name">${dept}</div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: ${pct}%; background: ${color};"></div>
+                        </div>
+                        <div class="dept-stats">
+                            <span>${pct}%</span>
+                            <span>${stat.submitted}/${stat.expected}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            renderTrackingTable(trackingList);
+        }
+
+        function filterTrackingTable() {
+            const kw = document.getElementById('searchTeacher').value.toLowerCase();
+            const filtered = trackingList.filter(t => t.full_name.toLowerCase().includes(kw) || (t.department && t.department.toLowerCase().includes(kw)));
+            renderTrackingTable(filtered);
+        }
+
+        function renderTrackingTable(list) {
+            const tbody = document.getElementById('trackingBody');
+            tbody.innerHTML = '';
+
+            if(list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-muted);">ไม่พบข้อมูลบุคลากรที่รับผิดชอบการสอน</td></tr>';
+                return;
+            }
+
+            list.forEach(t => {
+                let statusHtml = '';
+                if(t.submittedCount >= t.expectedCount) statusHtml = '<span class="badge b-success"><i class="fa-solid fa-check"></i> ครบถ้วน</span>';
+                else if(t.submittedCount > 0) statusHtml = '<span class="badge b-warning"><i class="fa-solid fa-spinner"></i> ส่งบางส่วน</span>';
+                else statusHtml = '<span class="badge b-danger"><i class="fa-solid fa-xmark"></i> ยังไม่ส่ง</span>';
+
+                let missingHtml = t.missing.length > 0 
+                    ? `<span style="color:var(--danger); font-size:0.85rem; font-weight:700;">ขาด: ${t.missing.join(', ')}</span>` 
+                    : '-';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:800; color:var(--admin);">${t.teacher_code}</td>
+                        <td style="font-weight:700;">${t.full_name}</td>
+                        <td style="font-size:0.9rem; color:var(--text-muted);">${t.department}</td>
+                        <td style="text-align:center; font-weight:800;">${t.expectedCount}</td>
+                        <td style="text-align:center; font-weight:800; color:var(--primary);">${t.submittedCount}</td>
+                        <td style="text-align:center;">${statusHtml}</td>
+                        <td>${missingHtml}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function processApprovalData() {
+            const approveBody = document.getElementById('approveBody');
+            const approvedBody = document.getElementById('approvedBody');
+            approveBody.innerHTML = ''; approvedBody.innerHTML = '';
+
+            // จัดกลุ่มคำขอที่ยัง pending ตามรหัสวิชา
+            const pendingReqs = allRequests.filter(r => r.status === 'pending');
+            const groupedPending = {};
+            pendingReqs.forEach(r => {
+                if(!groupedPending[r.course_code]) groupedPending[r.course_code] = [];
+                groupedPending[r.course_code].push(r);
+            });
+
+            let pendingCount = 0;
+            for (const [code, reqs] of Object.entries(groupedPending)) {
+                // เช็คความขัดแย้งเวลาสอบ
+                const durations = new Set(reqs.map(r => r.duration_mins));
+                const hasConflict = durations.size > 1;
+                const rowClass = hasConflict ? 'conflict-row' : '';
+
+                reqs.forEach((r, idx) => {
+                    pendingCount++;
+                    const isFirst = idx === 0;
+                    const borderTop = isFirst ? 'border-top: 2px solid #d1d5db;' : '';
+                    const tName = dbTeachers.find(t => t.teacher_code === r.teacher_code)?.full_name || r.teacher_code;
+                    const cName = getSubjectName(r.course_code);
+
+                    let typeHtml = r.schedule_type === 'ในตารางจัดสอบ' 
+                        ? `<span class="badge b-success" style="background:var(--admin-light); color:var(--admin);">ในตาราง</span>`
+                        : `<span class="badge b-gray">นอกตาราง/ไม่สอบ</span>`;
+
+                    let actionHtml = '';
+                    if(r.schedule_type === 'ในตารางจัดสอบ') {
+                        if(hasConflict) {
+                            actionHtml = `<span style="color:var(--danger); font-weight:800; font-size:0.85rem;"><i class="fa-solid fa-lock"></i> ระงับการอนุมัติ (เวลาขัดแย้ง)</span>`;
+                        } else {
+                            actionHtml = `<button class="btn-approve" onclick="approveRequest('${r.id}')"><i class="fa-solid fa-check"></i> อนุมัติข้อมูล</button>`;
+                        }
+                    } else {
+                        // นอกตารางให้กดรับทราบ(อนุมัติ)เพื่อเคลียร์คิวได้เลย
+                        actionHtml = `<button class="btn-approve" style="background:var(--text-muted);" onclick="approveRequest('${r.id}')">รับทราบ</button>`;
+                    }
+
+                    approveBody.innerHTML += `
+                        <tr class="${rowClass}" style="${borderTop}">
+                            <td>
+                                <div style="font-weight:800; color:var(--admin-dark);">${r.course_code}</div>
+                                <div style="font-size:0.85rem; color:var(--text-muted);">${cName}</div>
+                                ${hasConflict ? '<div style="color:var(--danger); font-size:0.8rem; font-weight:800; margin-top:5px;">เวลาไม่ตรงกับผู้สอนอื่น</div>' : ''}
+                            </td>
+                            <td style="font-weight:700;">${tName}</td>
+                            <td>
+                                ${typeHtml}<br>
+                                <div style="font-size:0.85rem; font-weight:700; margin-top:5px; color:var(--primary-dark);">ห้อง: ${r.target_rooms || '-'}</div>
+                            </td>
+                            <td style="text-align:center; font-weight:800; color:${hasConflict ? 'var(--danger)' : 'var(--text-dark)'};">${r.duration_mins > 0 ? r.duration_mins : '-'}</td>
+                            <td style="text-align:center; vertical-align:middle;">${actionHtml}</td>
+                        </tr>
+                    `;
+                });
+            }
+            if(pendingCount === 0) approveBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; font-weight:800; color:var(--success);">ไม่มีข้อมูลรอการอนุมัติ</td></tr>';
+
+            // Render Approved
+            const approvedReqs = allRequests.filter(r => r.status === 'approved' && r.schedule_type === 'ในตารางจัดสอบ');
+            // Group ให้ดูง่ายๆ สำหรับคลัง
+            const groupedApproved = {};
+            approvedReqs.forEach(r => {
+                if(!groupedApproved[r.course_code]) groupedApproved[r.course_code] = { name: getSubjectName(r.course_code), duration: r.duration_mins, type: r.schedule_type, rooms: new Set() };
+                if(r.target_rooms) { r.target_rooms.split(',').forEach(rm => groupedApproved[r.course_code].rooms.add(rm.trim())); }
+            });
+
+            let appCount = 0;
+            for (const [code, info] of Object.entries(groupedApproved)) {
+                appCount++;
+                const roomList = Array.from(info.rooms).join(', ');
+                approvedBody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:800; color:var(--admin); font-size:1.05rem;">${code}</td>
+                        <td style="font-weight:700;">${info.name}</td>
+                        <td><span class="badge b-success" style="background:var(--admin-light); color:var(--admin);">${info.type}</span></td>
+                        <td style="color:var(--text-dark); font-size:0.9rem; font-weight:600; max-width:250px; white-space:normal;">${roomList || '-'}</td>
+                        <td style="text-align:center; font-weight:800; color:var(--danger); font-size:1.1rem;">${info.duration}</td>
+                    </tr>
+                `;
+            }
+            if(appCount === 0) approvedBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-muted);">ยังไม่มีวิชาที่ผ่านการอนุมัติ</td></tr>';
+        }
+
+        async function approveRequest(id) {
+            const { error } = await supabaseClient.from('exam_requests').update({status: 'approved'}).eq('id', id);
+            if(!error) {
+                await loadTrackingAndApprovalData();
+            } else {
+                alert("Error: " + error.message);
+            }
+        }
+
+        window.onload = initAdmin;
+    </script>
+</body>
+</html>

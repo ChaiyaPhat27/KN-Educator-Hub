@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ศูนย์ประสานงานผู้สอน - KN Educator Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --primary: #1f8ffd; --primary-dark: #0b5fa6; --primary-light: #e8f4fd;
+            --admin: #8e44ad; --admin-dark: #732d91; --admin-light: #f4e8f9;
+            --bg-gray: #f3f4f6; --surface: #ffffff;
+            --text-dark: #1f2937; --text-muted: #6b7280;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --border-color: #e5e7eb;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Anuphan', sans-serif; }
+        body { background-color: var(--bg-gray); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; display: flex; flex-direction: column; }
+
+        /* Navbar มาตรฐานใหม่ */
+        .top-navbar { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 90; box-shadow: 0 2px 10px rgba(0,0,0,0.02);}
+        .navbar-left { display: flex; align-items: center; gap: 20px; }
+        .btn-back { background: var(--bg-gray); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-family: 'Anuphan'; font-weight: 700; font-size: 0.95rem; color: var(--text-dark); display: flex; align-items: center; gap: 8px; transition: 0.2s; text-decoration: none;}
+        .btn-back:hover { background: #e5e7eb; }
+        .navbar-left h2 { margin: 0; font-size: 1.3rem; color: var(--text-dark); font-weight: 800; border-left: 2px solid var(--border-color); padding-left: 20px;}
+        
+        .nav-user { display: flex; align-items: center; gap: 15px; padding: 5px 15px; background: var(--primary-light); border-radius: 50px;}
+        .nav-user.admin-theme { background: var(--admin-light); }
+        .nav-user-info { text-align: right; line-height: 1.2; }
+        .nav-user-id { font-size: 0.8rem; color: var(--primary); font-weight: 700;}
+        .nav-user.admin-theme .nav-user-id { color: var(--admin); }
+        .nav-user-name { font-size: 1rem; color: var(--text-dark); font-weight: 800; }
+        .nav-user i { font-size: 2rem; color: var(--primary); }
+
+        /* Content Area */
+        .main-wrapper { flex: 1; width: 100%; display: flex; flex-direction: column;}
+        .content { padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; }
+
+        .sys-banner { background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%); color: white; border-radius: 16px; padding: 25px 35px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 20px rgba(31,143,253,0.15);}
+        .sys-banner h2 { margin: 0; font-size: 1.5rem; font-weight: 800;}
+        .sys-banner p { margin: 8px 0 0 0; opacity: 0.9; font-size: 1rem; }
+        .dept-badge { background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 30px; font-weight: 800; font-size: 1rem; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3);}
+
+        /* Tabs UI */
+        .tabs-container { display: flex; background: var(--surface); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border-color); margin-bottom: 25px; padding: 8px;}
+        .tab-btn { flex: 1; padding: 16px 20px; text-align: center; font-size: 1.05rem; font-weight: 800; color: var(--text-muted); cursor: pointer; transition: 0.3s; border-radius: 12px; margin: 0 5px;}
+        .tab-btn:hover { background: var(--bg-gray); color: var(--primary); }
+        .tab-btn.active { color: white; background: var(--primary); box-shadow: 0 4px 12px rgba(31,143,253,0.3); }
+
+        .tab-pane { display: none; animation: fadeIn 0.4s; }
+        .tab-pane.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Board Cards */
+        .board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
+        .match-card { background: white; border-radius: 20px; padding: 25px; border: 1px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between;}
+        .match-card:hover { border-color: var(--primary-light); box-shadow: 0 10px 20px rgba(31,143,253,0.1); transform: translateY(-4px);}
+        
+        .mc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;}
+        .mc-badge { font-size: 0.85rem; font-weight: 800; padding: 5px 12px; border-radius: 20px;}
+        .mc-badge.sub { background: var(--primary-light); color: var(--primary-dark); border: 1px solid #bfdbfe;}
+        .mc-badge.swap { background: #fef3c7; color: #b45309; border: 1px solid #fde68a;}
+        
+        .mc-date { font-size: 0.9rem; font-weight: 800; color: var(--danger); text-align: right;}
+        
+        .mc-course { font-size: 1.1rem; font-weight: 800; color: var(--text-dark); margin-bottom: 5px;}
+        .mc-period { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 15px;}
+        
+        .mc-requester { background: #f9fafb; padding: 12px 15px; border-radius: 12px; font-size: 0.9rem; color: var(--text-dark); margin-bottom: 20px; border: 1px dashed var(--border-color);}
+        .mc-requester span { font-weight: 800; color: var(--primary); display: block; font-size: 1rem; margin-bottom: 3px;}
+        
+        .btn-accept { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; transition: 0.2s; font-family: 'Anuphan'; font-size: 1.05rem;}
+        .btn-accept:hover { background: var(--primary-dark); }
+        .btn-accept.swap-btn { background: var(--warning); color: white; }
+        .btn-accept.swap-btn:hover { background: #d68910; }
+
+        /* Form section */
+        .card { background: var(--surface); border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border-color); padding: 35px; }
+        .section-title { font-size: 1.3rem; font-weight: 800; color: var(--text-dark); border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px;}
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .input-group label { display: block; font-weight: 800; margin-bottom: 8px; color: var(--text-dark); font-size: 0.95rem; }
+        .input-group select, .input-group input, .input-group textarea { width: 100%; padding: 15px 20px; border: 1.5px solid #d1d5db; border-radius: 12px; font-size: 1rem; transition: 0.3s; background: #f9fafb; font-family: 'Anuphan'; outline: none;}
+        .input-group select:focus, .input-group input:focus, .input-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(31,143,253,0.15); background: white; }
+        
+        .swap-box { background: #fef3c7; border: 1px dashed #f59e0b; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: none;}
+        .swap-box label { color: #b45309; }
+        .swap-box input { border-color: #fde68a; }
+
+        .btn-submit { padding: 18px 30px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1.15rem; font-weight: 800; cursor: pointer; transition: 0.3s; width: 100%; margin-top: 10px; box-shadow: 0 4px 15px rgba(31,143,253,0.3);}
+        .btn-submit:hover { background: var(--primary-dark); transform: translateY(-2px);}
+
+        /* Table */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        table th { background: #f9fafb; color: var(--text-muted); font-weight: 800; padding: 18px 20px; text-align: left; font-size: 0.9rem; text-transform: uppercase; white-space: nowrap;}
+        table td { padding: 18px 20px; border-bottom: 1px dashed var(--border-color); font-size: 0.95rem; vertical-align: middle; color: var(--text-dark);}
+        
+        .status-badge { padding: 6px 15px; border-radius: 30px; font-size: 0.85rem; font-weight: 800; display: inline-block;}
+        .s-pending { background: #fef3c7; color: var(--warning); border: 1px solid #fde68a; }
+        .s-accepted { background: #d1fae5; color: var(--success); border: 1px solid #a7f3d0; }
+        .s-cancelled { background: #f3f4f6; color: #9ca3af; border: 1px solid #d1d5db; }
+
+        .btn-cancel { background: #fee2e2; color: var(--danger); border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 800; font-family: 'Anuphan'; transition: 0.2s;}
+        .btn-cancel:hover:not(:disabled) { background: var(--danger); color: white; }
+        .btn-cancel:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 9999; opacity: 0; visibility: hidden; transition: 0.3s;}
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-box { background: white; width: 90%; max-width: 450px; border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); transform: translateY(20px); transition: 0.3s; }
+        .modal-overlay.active .modal-box { transform: translateY(0); }
+        .modal-btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; font-family: 'Anuphan'; font-size: 1.05rem; margin-top: 20px;}
+
+        @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-box" id="modalBox">
+            <h3 id="modalTitle" style="font-size:1.5rem; font-weight:800; margin-bottom:15px; color:var(--text-dark);">แจ้งเตือน</h3>
+            <p id="modalText" style="color:var(--text-muted); margin-bottom:25px; line-height:1.6; font-size:1.05rem;">ข้อความ</p>
+            <button class="modal-btn" id="modalBtnClose" onclick="document.getElementById('customModal').classList.remove('active')">ตกลง</button>
+        </div>
+    </div>
+
+    <div class="top-navbar">
+        <div class="navbar-left">
+            <a href="dashboard.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> กลับหน้าหลัก</a>
+            <h2>KN Educator Hub | ศูนย์ประสานงานผู้สอน</h2>
+        </div>
+        <div class="nav-user" id="nav_user_box">
+            <div class="nav-user-info">
+                <div class="nav-user-id" id="nav_role_title">รหัส: <span id="nav_code">กำลังโหลด...</span></div>
+                <div class="nav-user-name" id="nav_fullname">กำลังโหลดข้อมูล...</div>
+            </div>
+            <div style="width:40px; height:40px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-size:1.2rem; font-weight:800;" id="nav_initial">?</div>
+        </div>
+    </div>
+
+    <div class="main-wrapper" id="main-wrapper">
+        <div class="content" id="main-content" style="display: none;">
+            
+            <div class="sys-banner">
+                <div>
+                    <h2>ศูนย์ประสานงานสอนแทนและแลกคาบ</h2>
+                    <p>ระบบแจ้งความจำนงเพื่อหาผู้สอนแทน หรือสลับคาบเรียน ภายในกลุ่มสาระการเรียนรู้</p>
+                </div>
+                <div class="dept-badge" id="display_dept">กลุ่มสาระ: กำลังโหลด...</div>
+            </div>
+
+            <div class="tabs-container">
+                <div class="tab-btn active" onclick="switchTab('tab-board', this)">กระดานหาคนสอนแทน</div>
+                <div class="tab-btn" onclick="switchTab('tab-form', this)">สร้างคำขอใหม่</div>
+                <div class="tab-btn" onclick="switchTab('tab-history', this)">ประวัติและการจับคู่ของฉัน</div>
+            </div>
+
+            <div id="tab-board" class="tab-pane active">
+                <div class="board-grid" id="boardContainer">
+                    <div style="grid-column: 1 / -1; text-align:center; padding:60px; background:white; border-radius:20px; border:1px dashed #d1d5db;">
+                        <h4 style="color:var(--text-muted); margin:0; font-size:1.2rem;">กำลังโหลดข้อมูลกระดาน...</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-form" class="tab-pane">
+                <div class="card">
+                    <div class="section-title">แบบฟอร์มแจ้งความจำนง</div>
+                    <form id="matchForm" onsubmit="submitRequest(event)">
+                        
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label>ประเภทคำขอ</label>
+                                <select id="request_type" required onchange="handleTypeChange()">
+                                    <option value="สอนแทน">ต้องการผู้สอนแทน (ไม่ต้องชดเชย)</option>
+                                    <option value="แลกคาบ">ต้องการแลกคาบ (สลับคาบสอนกัน)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>วันที่ต้องการให้สอน</label>
+                                <input type="date" id="target_date" required>
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label>คาบเรียนที่ต้องการให้สอน</label>
+                                <select id="target_period" required>
+                                    <option value="">-- เลือกคาบเรียน --</option>
+                                    <option value="คาบ 1 (08.30-09.20)">คาบ 1 (08.30 - 09.20)</option>
+                                    <option value="คาบ 2 (09.20-10.10)">คาบ 2 (09.20 - 10.10)</option>
+                                    <option value="คาบ 3 (10.10-11.00)">คาบ 3 (10.10 - 11.00)</option>
+                                    <option value="คาบ 4 (11.00-11.50)">คาบ 4 (11.00 - 11.50)</option>
+                                    <option value="คาบ 5 (11.50-12.40)">คาบ 5 (11.50 - 12.40)</option>
+                                    <option value="คาบ 6 (12.40-13.30)">คาบ 6 (12.40 - 13.30)</option>
+                                    <option value="คาบ 7 (13.30-14.20)">คาบ 7 (13.30 - 14.20)</option>
+                                    <option value="คาบ 8 (14.20-15.10)">คาบ 8 (14.20 - 15.10)</option>
+                                    <option value="คาบ 9 (15.10-16.00)">คาบ 9 (15.10 - 16.00)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>รายวิชาที่สอน</label>
+                                <select id="course_select" required>
+                                    <option value="">-- กำลังดึงข้อมูลจากแผนการสอน --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>ระบุห้องเรียน</label>
+                            <input type="text" id="target_room" placeholder="เช่น ม.4/1, ม.6/2" required>
+                        </div>
+
+                        <div class="swap-box" id="swapBox">
+                            <div class="input-group" style="margin:0;">
+                                <label>ข้อเสนอคาบที่จะสอนชดเชยให้ (เฉพาะกรณีแลกคาบ)</label>
+                                <input type="text" id="swap_offer_period" placeholder="เช่น วันศุกร์ คาบ 5 ห้อง 4/2">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>เหตุผลความจำเป็น</label>
+                            <textarea id="reason" rows="3" placeholder="ระบุเหตุผล เช่น ลาป่วย, ไปราชการด่วน..." required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-submit" id="btnSubmit">บันทึกและประกาศลงกระดานหมวด</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="tab-history" class="tab-pane">
+                <div class="card">
+                    <div class="section-title">รายการที่ฉันเป็นผู้สร้างคำขอ</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>วันที่ส่งคำขอ</th>
+                                    <th>ประเภท</th>
+                                    <th>รายละเอียดวิชาและเวลา</th>
+                                    <th style="text-align:center;">สถานะ</th>
+                                    <th>ผู้รับงาน</th>
+                                    <th style="text-align:center;">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="myRequestsBody">
+                                <tr><td colspan="6" style="text-align:center; padding:40px; color:#9ca3af;">ไม่มีข้อมูลประวัติ</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top:30px;">
+                    <div class="section-title" style="color:var(--success);">รายการที่ฉันรับสอนแทน / แลกคาบ</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ผู้ยื่นขอ</th>
+                                    <th>ประเภท</th>
+                                    <th>รายละเอียดที่ต้องไปสอน</th>
+                                    <th>ข้อเสนอแลกคาบ (ถ้ามี)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="myAcceptedBody">
+                                <tr><td colspan="4" style="text-align:center; padding:40px; color:#9ca3af;">ไม่มีข้อมูลการรับงาน</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://yysxrbuzieyyzgjcjotf.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_D-ILjG-lssNJy0n86-PB7A_oEk9YP-r'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = null;
+        let dbTeachers = {}; 
+        let currentTerm = "";
+
+        function formatDateThai(dateStr) {
+            if(!dateStr) return "-";
+            const date = new Date(dateStr); const months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+            return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear() + 543}`;
+        }
+
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active'); element.classList.add('active');
+        }
+
+        function handleTypeChange() {
+            const type = document.getElementById('request_type').value;
+            const swapBox = document.getElementById('swapBox');
+            if(type === 'แลกคาบ') {
+                swapBox.style.display = 'block';
+                document.getElementById('swap_offer_period').required = true;
+            } else {
+                swapBox.style.display = 'none';
+                document.getElementById('swap_offer_period').required = false;
+                document.getElementById('swap_offer_period').value = "";
+            }
+        }
+
+        async function initPage() {
+            const sessionStr = localStorage.getItem('kn_teacher_session');
+            if (!sessionStr) return window.location.href = 'index.html';
+            currentUser = JSON.parse(sessionStr);
+            
+            document.getElementById('nav_fullname').innerText = currentUser.full_name;
+            document.getElementById('nav_code').innerText = currentUser.teacher_code;
+            document.getElementById('nav_initial').innerText = currentUser.full_name.charAt(0);
+            
+            const dept = currentUser.department || 'ไม่ได้ระบุหมวด';
+            document.getElementById('display_dept').innerText = `กลุ่มสาระ: ${dept}`;
+            document.getElementById('main-content').style.display = 'block';
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('target_date').value = today;
+
+            // โหลดตั้งค่าระบบเพื่อหา Term
+            const sysSet = await supabaseClient.from('system_settings').select('current_term').eq('id', 1).single();
+            if(sysSet.data) currentTerm = sysSet.data.current_term;
+
+            // โหลดรายชื่อครู
+            const resTeachers = await supabaseClient.from('teachers').select('teacher_code, full_name');
+            if(resTeachers.data) {
+                resTeachers.data.forEach(t => dbTeachers[t.teacher_code] = t.full_name);
+            }
+
+            await loadMyTeachingSubjects();
+            loadBoard();
+            loadMyHistory();
+        }
+
+        // ฟังก์ชันดึงวิชาที่สอนมาใส่ Dropdown
+        async function loadMyTeachingSubjects() {
+            const select = document.getElementById('course_select');
+            
+            const { data } = await supabaseClient
+                .from('teaching_plans')
+                .select(`course_code, class_rooms, subjects (course_name)`)
+                .eq('teacher_code', currentUser.teacher_code)
+                .eq('term', currentTerm);
+
+            if(data && data.length > 0) {
+                let options = '<option value="">-- เลือกวิชาที่สอน --</option>';
+                data.forEach(p => {
+                    const cName = p.subjects ? p.subjects.course_name : '';
+                    // เก็บค่ารวมกันเพื่อให้ไปโชว์ในฐานข้อมูลได้สวยๆ
+                    const val = `${p.course_code} ${cName}`;
+                    options += `<option value="${val}">${val} (สอนห้อง ${p.class_rooms})</option>`;
+                });
+                select.innerHTML = options;
+            } else {
+                select.innerHTML = '<option value="">-- ไม่พบวิชาในแผนการสอนเทอมนี้ --</option>';
+            }
+        }
+
+        async function loadBoard() {
+            const dept = currentUser.department;
+            const { data, error } = await supabaseClient
+                .from('class_substitutes')
+                .select('*')
+                .eq('department', dept)
+                .eq('status', 'pending')
+                .neq('requester_code', currentUser.teacher_code)
+                .order('target_date', { ascending: true });
+
+            const container = document.getElementById('boardContainer');
+            container.innerHTML = '';
+
+            if(error || !data || data.length === 0) {
+                container.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:60px; background:white; border-radius:20px; border:1px dashed #d1d5db;"><h4 style="color:var(--text-muted); margin:0; font-size:1.2rem;">ไม่มีคำขอสอนแทนในหมวดขณะนี้</h4></div>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const reqName = dbTeachers[item.requester_code] || item.requester_code;
+                const isSwap = item.request_type === 'แลกคาบ';
+                const badgeClass = isSwap ? 'swap' : 'sub';
+                const btnClass = isSwap ? 'swap-btn' : '';
+                const btnText = isSwap ? 'รับตกลงแลกคาบ' : 'รับเป็นผู้สอนแทน';
+
+                const swapHtml = isSwap ? `<div style="background:#fffbeb; padding:10px 15px; border-radius:8px; font-size:0.85rem; color:#b45309; margin-bottom:15px; border:1px dashed #fde68a;"><b>ข้อเสนอแลก:</b> ${item.swap_offer_period}</div>` : '';
+
+                const card = document.createElement('div');
+                card.className = 'match-card';
+                card.innerHTML = `
+                    <div>
+                        <div class="mc-header">
+                            <span class="mc-badge ${badgeClass}">${item.request_type}</span>
+                            <div class="mc-date">วันที่สอน: <br><span style="color:var(--text-dark);">${formatDateThai(item.target_date)}</span></div>
+                        </div>
+                        <div class="mc-course">${item.course_info}</div>
+                        <div class="mc-period">เวลา: ${item.target_period}</div>
+                        ${swapHtml}
+                        <div class="mc-requester">
+                            <span>ผู้แจ้ง: ${reqName}</span>
+                            เหตุผล: ${item.reason}
+                        </div>
+                    </div>
+                    <button class="btn-accept ${btnClass}" onclick="acceptRequest('${item.id}', '${item.request_type}', '${reqName}')">${btnText}</button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function submitRequest(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            btn.innerHTML = 'กำลังบันทึกข้อมูล...'; btn.disabled = true;
+
+            // รวมข้อมูลวิชาและห้องเข้าด้วยกัน
+            const combinedCourseInfo = `${document.getElementById('course_select').value} ห้อง ${document.getElementById('target_room').value.trim()}`;
+
+            const payload = {
+                requester_code: currentUser.teacher_code,
+                department: currentUser.department || 'ไม่ระบุ',
+                request_type: document.getElementById('request_type').value,
+                target_date: document.getElementById('target_date').value,
+                target_period: document.getElementById('target_period').value,
+                course_info: combinedCourseInfo,
+                reason: document.getElementById('reason').value.trim(),
+                swap_offer_period: document.getElementById('swap_offer_period').value.trim() || null,
+                status: 'pending'
+            };
+
+            const { error } = await supabaseClient.from('class_substitutes').insert([payload]);
+
+            if(error) {
+                alert("เกิดข้อผิดพลาด: " + error.message);
+            } else {
+                document.getElementById('customModal').classList.add('active');
+                document.getElementById('modalTitle').innerText = "ประกาศลงกระดานสำเร็จ";
+                document.getElementById('modalText').innerText = "คำขอของคุณถูกส่งไปยังกระดานของหมวดเรียบร้อยแล้ว รอให้เพื่อนครูเข้ามากดรับงานครับ";
+                document.getElementById('modalBtnClose').onclick = () => {
+                    document.getElementById('customModal').classList.remove('active');
+                    switchTab('tab-history', document.querySelectorAll('.tab-btn')[2]);
+                };
+                
+                // รีเซ็ตฟอร์มแต่เว้นวันที่ไว้
+                const tempDate = document.getElementById('target_date').value;
+                document.getElementById('matchForm').reset();
+                document.getElementById('target_date').value = tempDate;
+                
+                handleTypeChange();
+                loadMyHistory();
+            }
+            btn.innerHTML = 'บันทึกและประกาศลงกระดานหมวด'; btn.disabled = false;
+        }
+
+        async function acceptRequest(id, type, reqName) {
+            if(confirm(`ยืนยันที่จะรับ ${type} ให้กับคุณครู ${reqName} ใช่หรือไม่?`)) {
+                const { error } = await supabaseClient.from('class_substitutes').update({
+                    status: 'accepted',
+                    substitute_code: currentUser.teacher_code
+                }).eq('id', id);
+
+                if(!error) {
+                    alert("รับงานสำเร็จ! ข้อมูลถูกบันทึกลงประวัติของคุณแล้ว");
+                    loadBoard();
+                    loadMyHistory();
+                } else {
+                    alert("เกิดข้อผิดพลาด: " + error.message);
+                }
+            }
+        }
+
+        async function loadMyHistory() {
+            const { data, error } = await supabaseClient.from('class_substitutes').select('*')
+                .or(`requester_code.eq.${currentUser.teacher_code},substitute_code.eq.${currentUser.teacher_code}`)
+                .order('created_at', { ascending: false });
+
+            const myReqBody = document.getElementById('myRequestsBody');
+            const myAccBody = document.getElementById('myAcceptedBody');
+            myReqBody.innerHTML = ''; myAccBody.innerHTML = '';
+
+            let cReq = 0, cAcc = 0;
+
+            if(data) {
+                data.forEach(item => {
+                    const reqName = dbTeachers[item.requester_code] || item.requester_code;
+                    const subName = item.substitute_code ? (dbTeachers[item.substitute_code] || item.substitute_code) : '-';
+                    const isSwap = item.request_type === 'แลกคาบ';
+
+                    if(item.requester_code === currentUser.teacher_code) {
+                        cReq++;
+                        let statusHtml = ''; let canCancel = false;
+                        if(item.status === 'pending') { statusHtml = `<span class="status-badge s-pending">รอผู้รับงาน</span>`; canCancel = true; }
+                        else if(item.status === 'accepted') { statusHtml = `<span class="status-badge s-accepted">มีผู้รับงานแล้ว</span>`; }
+                        else { statusHtml = `<span class="status-badge s-cancelled">ยกเลิกแล้ว</span>`; }
+
+                        const cancelBtn = canCancel ? `<button class="btn-cancel" onclick="cancelRequest('${item.id}')">ยกเลิก</button>` : `<button class="btn-cancel" disabled>ยกเลิกไม่ได้</button>`;
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td style="font-size:0.85rem; color:var(--text-muted);">${formatDateThai(item.created_at)}</td>
+                            <td style="font-weight:800; color:${isSwap ? 'var(--warning)' : 'var(--primary)'};">${item.request_type}</td>
+                            <td>
+                                <div style="font-weight:800;">${item.course_info}</div>
+                                <div style="font-size:0.85rem; color:var(--text-muted); margin-top:3px;">${formatDateThai(item.target_date)} | ${item.target_period}</div>
+                            </td>
+                            <td style="text-align:center;">${statusHtml}</td>
+                            <td style="font-weight:700; color:var(--admin);">${subName}</td>
+                            <td style="text-align:center;">${cancelBtn}</td>
+                        `;
+                        myReqBody.appendChild(tr);
+                    }
+
+                    if(item.substitute_code === currentUser.teacher_code) {
+                        cAcc++;
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td style="font-weight:800; color:var(--primary-dark);">${reqName}</td>
+                            <td style="font-weight:800; color:${isSwap ? 'var(--warning)' : 'var(--primary)'};">${item.request_type}</td>
+                            <td>
+                                <div style="font-weight:800;">${item.course_info}</div>
+                                <div style="font-size:0.85rem; color:var(--text-muted); margin-top:3px;">${formatDateThai(item.target_date)} | ${item.target_period}</div>
+                            </td>
+                            <td style="font-size:0.9rem; color:#b45309;">${item.swap_offer_period || '-'}</td>
+                        `;
+                        myAccBody.appendChild(tr);
+                    }
+                });
+            }
+
+            if(cReq === 0) myReqBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#9ca3af;">ไม่มีข้อมูลประวัติ</td></tr>';
+            if(cAcc === 0) myAccBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:40px; color:#9ca3af;">ไม่มีข้อมูลการรับงาน</td></tr>';
+        }
+
+        async function cancelRequest(id) {
+            if(confirm('ยืนยันการยกเลิกคำขอนี้ใช่หรือไม่?')) {
+                const { error } = await supabaseClient.from('class_substitutes').update({ status: 'cancelled' }).eq('id', id);
+                if(!error) { loadMyHistory(); loadBoard(); }
+            }
+        }
+
+        window.onload = initPage;
+    </script>
+</body>
+</html>

@@ -19,7 +19,32 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Anuphan', sans-serif; }
-        body { background-color: var(--bg-gray); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; display: flex; flex-direction: column; }
+        
+        /* Page Transition Effects */
+        body { 
+            background-color: var(--bg-gray); 
+            color: var(--text-dark); 
+            min-height: 100vh; 
+            overflow-x: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            animation: fadeIn 0.4s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        body.fade-out {
+            animation: fadeOut 0.3s ease-in forwards;
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
 
         /* Navbar มาตรฐาน */
         .top-navbar { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 90; box-shadow: 0 2px 10px rgba(0,0,0,0.02);}
@@ -53,7 +78,7 @@
         /* Main Layout */
         .main-grid { display: grid; grid-template-columns: 1fr 2.5fr; gap: 30px; }
         
-        .card { background: var(--surface); border-radius: 20px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border-color);}
+        .card { background: var(--surface); border-radius: 20px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border-color); margin-bottom: 30px;}
         .card-title { font-size: 1.3rem; font-weight: 800; color: var(--text-dark); margin-bottom: 25px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; display: flex; align-items: center; gap: 10px;}
         
         /* Profile Details */
@@ -76,31 +101,48 @@
         .action-card.admin-card:hover { border-color: var(--admin); box-shadow: 0 10px 20px rgba(142,68,173,0.15);}
         .action-card.admin-card i { color: var(--admin); }
 
+        /* Full Width Notifications (Grid Layout) */
+        .noti-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
+        
+        .noti-item { 
+            background: white; 
+            border: 1px solid var(--border-color); 
+            border-radius: 16px; 
+            padding: 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            transition: 0.3s;
+            text-decoration: none; /* For links */
+            color: inherit;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Interactive Hover Effect */
+        .noti-item:hover { 
+            background: #fdfdfd; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08); 
+            border-color: var(--primary); 
+            transform: translateY(-3px);
+        }
+        
+        /* Icon Hover Animation */
+        .noti-item:hover .noti-icon i {
+            transform: scale(1.1);
+        }
+
+        .noti-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; flex-shrink: 0; transition: 0.3s;}
+        .noti-icon i { transition: 0.3s; }
+        
+        .noti-content { flex: 1; }
+        .noti-title { font-weight: 800; color: var(--text-dark); font-size: 1.05rem; margin-bottom: 5px; display: flex; justify-content: space-between;}
+        .noti-desc { font-size: 0.95rem; color: var(--text-muted); line-height: 1.4;}
+        .noti-badge { font-size: 0.8rem; padding: 5px 12px; border-radius: 20px; font-weight: 800; white-space: nowrap;}
+        .noti-date { font-size: 0.8rem; color: #9ca3af;}
+
         @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
-
-        /* ==========================================
-        Page Transition Effect
-        ========================================== */
-        body {
-            animation: fadeIn 0.4s ease-out forwards;
-            opacity: 0; /* เริ่มต้นให้โปร่งใส */
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* คลาสสำหรับเรียกใช้ตอนกดเปลี่ยนหน้า */
-        body.fade-out {
-            animation: fadeOut 0.3s ease-in forwards;
-        }
-
-        @keyframes fadeOut {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-10px); }
-        }
-
     </style>
 </head>
 <body>
@@ -129,90 +171,110 @@
                     <h1 id="greet_name">สวัสดี, คุณครู</h1>
                     <p>ยินดีต้อนรับเข้าสู่ระบบปฏิบัติการส่วนบุคคล</p>
                 </div>
-                <div class="term-badge" id="display_term"><i class="fa-solid fa-calendar-check"></i> กำลังโหลดเทอม...</div>
+                <div class="term-badge" id="display_term"><i class="fa-solid fa-calendar-check"></i> กำลังโหลดภาคเรียน...</div>
+            </div>
+
+            <div class="card" style="border-top: 5px solid var(--warning);">
+                <div class="card-title" style="color:var(--text-dark);">
+                    <i class="fa-solid fa-bolt" style="color:var(--warning);"></i> 
+                    อัปเดตสถานะและแจ้งเตือนระบบ
+                    <span style="font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-left:10px;">(คลิกเพื่อดูรายละเอียด)</span>
+                </div>
+                <div class="noti-grid" id="notification_list">
+                    <div style="grid-column: 1 / -1; text-align:center; padding:30px; color:#9ca3af;">กำลังดึงข้อมูล...</div>
+                </div>
             </div>
 
             <div class="main-grid">
-                <div class="card" id="profile_card">
-                    <div class="card-title"><i class="fa-solid fa-id-badge"></i> ข้อมูลบุคลากร</div>
-                    <div class="profile-img" id="profile_img_box"><i class="fa-solid fa-user-tie"></i></div>
-                    <div style="text-align: center; margin-bottom: 25px;">
-                        <h3 id="dispName" style="font-size:1.3rem; font-weight:800; color:var(--text-dark);">กำลังโหลด...</h3>
-                        <p id="dispRole" style="font-weight:700; color:var(--primary); margin-top:5px;">ตำแหน่ง: ครูผู้สอน</p>
-                    </div>
-                    <div style="background: var(--bg-gray); padding: 20px; border-radius: 12px;">
-                        <div class="info-row"><span class="info-label">รหัสบุคลากร</span><span class="info-val" id="dispCode">...</span></div>
-                        <div class="info-row"><span class="info-label">กลุ่มสาระฯ</span><span class="info-val" id="dispDept">...</span></div>
-                        <div class="info-row"><span class="info-label">อีเมลองค์กร</span><span class="info-val" id="dispEmail" style="font-size:0.9rem;">...</span></div>
+                <div>
+                    <div class="card" id="profile_card" style="position: sticky; top: 120px;">
+                        <div class="card-title"><i class="fa-solid fa-id-badge"></i> ข้อมูลบุคลากร</div>
+                        <div class="profile-img" id="profile_img_box"><i class="fa-solid fa-user-tie"></i></div>
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <h3 id="dispName" style="font-size:1.3rem; font-weight:800; color:var(--text-dark);">กำลังโหลด...</h3>
+                            <p id="dispRole" style="font-weight:700; color:var(--primary); margin-top:5px;">ตำแหน่ง: ครูผู้สอน</p>
+                        </div>
+                        <div style="background: var(--bg-gray); padding: 20px; border-radius: 12px;">
+                            <div class="info-row"><span class="info-label">รหัสบุคลากร</span><span class="info-val" id="dispCode">...</span></div>
+                            <div class="info-row"><span class="info-label">กลุ่มสาระฯ</span><span class="info-val" id="dispDept">...</span></div>
+                            <div class="info-row"><span class="info-label">อีเมลองค์กร</span><span class="info-val" id="dispEmail" style="font-size:0.9rem;">...</span></div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-title"><i class="fa-solid fa-shapes"></i> พื้นที่การทำงาน (Workspace)</div>
-                    <div class="action-grid">
-                        
-                        <a href="teaching-plan.html" class="action-card">
-                            <i class="fa-solid fa-calendar-days"></i>
-                            <h4>แผนการสอน</h4>
-                            <p>กรอกและตรวจสอบตารางสอนของตนเอง</p>
-                        </a>
-                        <a href="teacher-exam.html" class="action-card">
-                            <i class="fa-solid fa-file-pen"></i>
-                            <h4>แจ้งจัดสอบ</h4>
-                            <p>แจ้งความจำนงการจัดสอบรายวิชา</p>
-                        </a>
-                        <a href="teacher-print.html" class="action-card">
-                            <i class="fa-solid fa-print"></i>
-                            <h4>สั่งถ่ายเอกสาร</h4>
-                            <p>ส่งไฟล์สั่งปริ้นและติดตามสถานะ</p>
-                        </a>
-                        <a href="teacher-leave.html" class="action-card">
-                            <i class="fa-solid fa-file-signature"></i>
-                            <h4>ขอลางาน</h4>
-                            <p>ยื่นใบลาออนไลน์และประวัติ</p>
-                        </a>
-                        <a href="teacher-whisper.html" class="action-card">
-                            <i class="fa-solid fa-user-secret"></i>
-                            <h4>กล่องรับฟัง</h4>
-                            <p>เสนอแนะและแจ้งปัญหา (นิรนาม)</p>
-                        </a>
+                <div>
+                    <div class="card" style="margin-bottom: 0;">
+                        <div class="card-title"><i class="fa-solid fa-shapes"></i> พื้นที่การทำงานหลัก (Workspace)</div>
+                        <div class="action-grid">
+                            
+                            <a href="teaching-plan.html" class="action-card">
+                                <i class="fa-solid fa-calendar-days"></i>
+                                <h4>แผนการสอน</h4>
+                                <p>กรอกและตรวจสอบตารางสอน</p>
+                            </a>
+                            <a href="teacher-match.html" class="action-card">
+                                <i class="fa-solid fa-people-arrows"></i>
+                                <h4>ศูนย์ประสานงาน</h4>
+                                <p>หาผู้สอนแทนและแลกคาบ</p>
+                            </a>
+                            <a href="teacher-exam.html" class="action-card">
+                                <i class="fa-solid fa-file-pen"></i>
+                                <h4>แจ้งจัดสอบ</h4>
+                                <p>ความจำนงการจัดสอบรายวิชา</p>
+                            </a>
+                            <a href="teacher-print.html" class="action-card">
+                                <i class="fa-solid fa-print"></i>
+                                <h4>สั่งถ่ายเอกสาร</h4>
+                                <p>ส่งไฟล์สั่งพิมพ์และติดตาม</p>
+                            </a>
+                            <a href="teacher-leave.html" class="action-card">
+                                <i class="fa-solid fa-file-signature"></i>
+                                <h4>ขอลางาน</h4>
+                                <p>ยื่นใบลาออนไลน์และประวัติ</p>
+                            </a>
+                            <a href="teacher-whisper.html" class="action-card">
+                                <i class="fa-solid fa-user-secret"></i>
+                                <h4>กล่องรับฟัง</h4>
+                                <p>เสนอแนะและแจ้งปัญหา</p>
+                            </a>
 
-                        <a href="admin-subjects.html" class="action-card admin-card admin-only" style="display:none;">
-                            <i class="fa-solid fa-book-open"></i>
-                            <h4>จัดการวิชา</h4>
-                            <p>ตั้งค่ารายวิชาและเปิดระบบ</p>
-                        </a>
-                        <a href="admin-bulk-plan.html" class="action-card admin-card admin-only" style="display:none;">
-                            <i class="fa-solid fa-folder-tree"></i>
-                            <h4>ลงตารางกลุ่ม</h4>
-                            <p>นำเข้าตารางสอนแบบรวดเร็ว</p>
-                        </a>
-                        <a href="admin-workload.html" class="action-card admin-card admin-only" style="display:none;">
-                            <i class="fa-solid fa-chart-pie"></i>
-                            <h4>วิเคราะห์ภาระงาน</h4>
-                            <p>ภาพรวมการสอนและจัดกลุ่ม</p>
-                        </a>
-                        <a href="admin-exam.html" class="action-card admin-card admin-only" style="display:none;">
-                            <i class="fa-solid fa-calendar-week"></i>
-                            <h4>จัดตารางสอบ</h4>
-                            <p>จัดห้องสอบและผู้คุมสอบ</p>
-                        </a>
-                        <a href="admin-print-approve.html" class="action-card admin-card admin-only" style="display:none;">
-                            <i class="fa-solid fa-print"></i>
-                            <h4>ศูนย์ถ่ายเอกสาร</h4>
-                            <p>คิวงานปริ้นและอนุมัติ</p>
-                        </a>
-                        <a href="admin-leave-approve.html" class="action-card admin-card admin-only" style="display:none;">
-                            <i class="fa-solid fa-clipboard-check"></i>
-                            <h4>อนุมัติลางาน</h4>
-                            <p>จัดการคำขอลางานบุคลากร</p>
-                        </a>
-                        <a href="admin-whisper.html" class="action-card admin-card admin-only" style="display:none;">
-                            <i class="fa-solid fa-comment-dots"></i>
-                            <h4>ตอบกลับข้อความ</h4>
-                            <p>จัดการข้อเสนอแนะนิรนาม</p>
-                        </a>
+                            <a href="admin-subjects.html" class="action-card admin-card admin-only" style="display:none;">
+                                <i class="fa-solid fa-book-open"></i>
+                                <h4>จัดการวิชา</h4>
+                                <p>ตั้งค่าและเปิดระบบ</p>
+                            </a>
+                            <a href="admin-bulk-plan.html" class="action-card admin-card admin-only" style="display:none;">
+                                <i class="fa-solid fa-folder-tree"></i>
+                                <h4>ลงตารางกลุ่ม</h4>
+                                <p>นำเข้าข้อมูลแบบรวดเร็ว</p>
+                            </a>
+                            <a href="admin-workload.html" class="action-card admin-card admin-only" style="display:none;">
+                                <i class="fa-solid fa-chart-pie"></i>
+                                <h4>วิเคราะห์ภาระงาน</h4>
+                                <p>สถิติและเปรียบเทียบห้องเรียน</p>
+                            </a>
+                            <a href="admin-exam.html" class="action-card admin-card admin-only" style="display:none;">
+                                <i class="fa-solid fa-calendar-week"></i>
+                                <h4>จัดตารางสอบ</h4>
+                                <p>จัดห้องและผู้คุมสอบ</p>
+                            </a>
+                            <a href="admin-print-approve.html" class="action-card admin-card admin-only" style="display:none;">
+                                <i class="fa-solid fa-print"></i>
+                                <h4>ศูนย์ถ่ายเอกสาร</h4>
+                                <p>จัดการคิวงานสั่งพิมพ์</p>
+                            </a>
+                            <a href="admin-leave-approve.html" class="action-card admin-card admin-only" style="display:none;">
+                                <i class="fa-solid fa-clipboard-check"></i>
+                                <h4>อนุมัติลางาน</h4>
+                                <p>จัดการคำขอทรัพยากรบุคคล</p>
+                            </a>
+                            <a href="admin-whisper.html" class="action-card admin-card admin-only" style="display:none;">
+                                <i class="fa-solid fa-comment-dots"></i>
+                                <h4>ตอบกลับข้อความ</h4>
+                                <p>จัดการข้อเสนอแนะนิรนาม</p>
+                            </a>
 
+                        </div>
                     </div>
                 </div>
             </div>
@@ -220,6 +282,27 @@
     </div>
 
     <script>
+        // ==========================================
+        // Page Transition Logic (Fade in/out)
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const links = document.querySelectorAll('a[href]');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    const target = this.getAttribute('target');
+                    if (href && href !== '#' && target !== '_blank' && !href.startsWith('javascript:')) {
+                        e.preventDefault(); 
+                        document.body.classList.add('fade-out'); 
+                        setTimeout(() => { window.location.href = href; }, 300);
+                    }
+                });
+            });
+        });
+
+        // ==========================================
+        // Supabase & App Logic
+        // ==========================================
         const SUPABASE_URL = 'https://yysxrbuzieyyzgjcjotf.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_D-ILjG-lssNJy0n86-PB7A_oEk9YP-r'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -231,14 +314,18 @@
             }
         }
 
+        function formatDateThai(dateStr) {
+            if(!dateStr) return "-";
+            const date = new Date(dateStr); 
+            return `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear() + 543}`;
+        }
+
         async function loadDashboardData() {
             try {
                 const sessionStr = localStorage.getItem('kn_teacher_session');
                 if (!sessionStr) return window.location.href = 'index.html';
                 
                 const user = JSON.parse(sessionStr);
-
-                // ใส่ข้อมูลพื้นฐานทันที ป้องกันค่า Null เด้งพัง
                 const fullName = user.full_name || 'ผู้ใช้งาน';
                 const firstName = fullName.split(' ')[0];
                 
@@ -251,7 +338,6 @@
                 document.getElementById('dispEmail').innerText = user.email || 'ไม่ได้ระบุ';
                 document.getElementById('dispDept').innerText = user.department || 'ไม่ระบุ';
 
-                // โหมดแอดมิน
                 if (user.role === 'admin') {
                     document.getElementById('nav_user_box').classList.add('admin-theme');
                     document.getElementById('hero_banner').classList.add('admin-theme');
@@ -268,57 +354,128 @@
                     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
                 }
 
-                // สั่งโชว์หน้าจอทันที เพื่อไม่ให้ค้างขาว
                 document.getElementById('main-content').style.visibility = 'visible';
 
-                // โหลดข้อมูลเทอมจาก DB 
+                // โหลดเทอมปัจจุบัน
                 try {
-                    const { data: sysSet, error } = await supabaseClient.from('system_settings').select('current_term').eq('id', 1).single();
-                    if(sysSet && !error) {
-                        document.getElementById('display_term').innerHTML = `<i class="fa-solid fa-calendar-check"></i> ภาคเรียนที่ ${sysSet.current_term}`;
-                    } else {
-                        document.getElementById('display_term').innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ไม่พบข้อมูลเทอม`;
-                    }
-                } catch(dbError) {
-                    console.error('Error fetching term:', dbError);
-                    document.getElementById('display_term').innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ไม่สามารถดึงข้อมูลได้`;
-                }
+                    const { data: sysSet } = await supabaseClient.from('system_settings').select('current_term').eq('id', 1).single();
+                    if(sysSet) document.getElementById('display_term').innerHTML = `<i class="fa-solid fa-calendar-check"></i> ภาคเรียนที่ ${sysSet.current_term}`;
+                } catch(e) {}
+
+                // โหลดระบบแจ้งเตือน
+                loadNotifications(user);
 
             } catch (err) {
-                console.error("Dashboard Init Error:", err);
-                alert("เกิดข้อผิดพลาดในการแสดงผลหน้าหลัก หากปัญหายังอยู่กรุณาล็อกอินใหม่ครับ");
-                // เผื่อพังจริงๆ ให้โชว์หน้าให้กดออกระบบได้
+                console.error("Dashboard Error:", err);
                 document.getElementById('main-content').style.visibility = 'visible'; 
             }
         }
 
-        window.onload = loadDashboardData;
+        async function loadNotifications(user) {
+            const listEl = document.getElementById('notification_list');
+            let notis = [];
 
-        // ==========================================
-        // Page Transition Logic
-        // ==========================================
-        document.addEventListener('DOMContentLoaded', () => {
-            const links = document.querySelectorAll('a[href]');
-            
-            links.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    const href = this.getAttribute('href');
-                    const target = this.getAttribute('target');
+            try {
+                // 1. เช็คคำขอลางาน
+                const { data: leaves } = await supabaseClient.from('leave_requests')
+                    .select('leave_type, start_date, status, updated_at')
+                    .eq('teacher_code', user.teacher_code).order('updated_at', {ascending: false}).limit(2);
+                
+                if(leaves) {
+                    leaves.forEach(l => {
+                        let bColor = l.status === 'approved' ? '#d1fae5' : (l.status === 'rejected' ? '#fee2e2' : '#fef3c7');
+                        let tColor = l.status === 'approved' ? 'var(--success)' : (l.status === 'rejected' ? 'var(--danger)' : 'var(--warning)');
+                        let txt = l.status === 'approved' ? 'อนุมัติแล้ว' : (l.status === 'rejected' ? 'ไม่อนุมัติ' : 'รอพิจารณา');
+                        
+                        notis.push({
+                            dateObj: new Date(l.updated_at),
+                            html: `
+                            <a href="teacher-leave.html" class="noti-item">
+                                <div class="noti-icon" style="background:#e8f4fd; color:var(--primary);"><i class="fa-solid fa-file-signature"></i></div>
+                                <div class="noti-content">
+                                    <div class="noti-title">ระบบลางาน <span class="noti-date">${formatDateThai(l.updated_at)}</span></div>
+                                    <div class="noti-desc">คำขอ${l.leave_type} เริ่มวันที่ ${formatDateThai(l.start_date)}</div>
+                                </div>
+                                <div class="noti-badge" style="background:${bColor}; color:${tColor};">${txt}</div>
+                            </a>`
+                        });
+                    });
+                }
 
-                    // เช็คว่าเป็นลิงก์ไปหน้าอื่นจริงๆ ไม่ใช่ลิงก์หลอก (#) หรือเปิดแท็บใหม่ (_blank)
-                    if (href && href !== '#' && target !== '_blank' && !href.startsWith('javascript:')) {
-                        e.preventDefault(); // ระงับการเปลี่ยนหน้าไว้ก่อน
+                // 2. เช็คสั่งถ่ายเอกสาร
+                const { data: prints } = await supabaseClient.from('print_requests')
+                    .select('title, status, updated_at')
+                    .eq('teacher_code', user.teacher_code).order('updated_at', {ascending: false}).limit(2);
+                
+                if(prints) {
+                    prints.forEach(p => {
+                        let bColor = '#f3f4f6'; let tColor = '#9ca3af'; let txt = 'ไม่ทราบสถานะ';
+                        if(p.status === 'pending') { bColor='#fef3c7'; tColor='var(--warning)'; txt='รอรับคิว'; }
+                        else if(p.status === 'approved') { bColor='#e8f4fd'; tColor='var(--primary)'; txt='รับเรื่องแล้ว'; }
+                        else if(p.status === 'processing') { bColor='#e0e7ff'; tColor='#2563eb'; txt='กำลังพิมพ์'; }
+                        else if(p.status === 'completed') { bColor='#d1fae5'; tColor='var(--success)'; txt='เสร็จสิ้น'; }
                         
-                        document.body.classList.add('fade-out'); // เรียกใช้เอฟเฟคจางหาย
-                        
-                        // รอให้ CSS เล่นเอฟเฟคจบ (300 มิลลิวินาที) แล้วค่อยเปลี่ยนหน้า
-                        setTimeout(() => {
-                            window.location.href = href;
-                        }, 300);
+                        notis.push({
+                            dateObj: new Date(p.updated_at),
+                            html: `
+                            <a href="teacher-print.html" class="noti-item">
+                                <div class="noti-icon" style="background:#f4e8f9; color:var(--admin);"><i class="fa-solid fa-print"></i></div>
+                                <div class="noti-content">
+                                    <div class="noti-title">สั่งถ่ายเอกสาร <span class="noti-date">${formatDateThai(p.updated_at)}</span></div>
+                                    <div class="noti-desc">${p.title}</div>
+                                </div>
+                                <div class="noti-badge" style="background:${bColor}; color:${tColor};">${txt}</div>
+                            </a>`
+                        });
+                    });
+                }
+
+                // 3. เช็คหาคนสอนแทนในหมวด
+                if(user.department) {
+                    const { data: subs } = await supabaseClient.from('class_substitutes')
+                        .select('request_type, target_date, course_info, created_at')
+                        .eq('department', user.department)
+                        .eq('status', 'pending')
+                        .neq('requester_code', user.teacher_code)
+                        .order('created_at', {ascending: false}).limit(2);
+                    
+                    if(subs) {
+                        subs.forEach(s => {
+                            notis.push({
+                                dateObj: new Date(s.created_at),
+                                html: `
+                                <a href="teacher-match.html" class="noti-item" style="border-color:#fde68a;">
+                                    <div class="noti-icon" style="background:#fef3c7; color:#b45309;"><i class="fa-solid fa-people-arrows"></i></div>
+                                    <div class="noti-content">
+                                        <div class="noti-title">ประกาศจากกลุ่มสาระฯ <span class="noti-date">${formatDateThai(s.created_at)}</span></div>
+                                        <div class="noti-desc" style="color:#b45309; font-weight:600;">เพื่อนหาคน${s.request_type} (${s.course_info})</div>
+                                    </div>
+                                    <div class="noti-badge" style="background:var(--warning); color:white;">
+                                        ช่วยสอนคลิก!
+                                    </div>
+                                </a>`
+                            });
+                        });
                     }
-                });
-            });
-        });
+                }
+
+                notis.sort((a, b) => b.dateObj - a.dateObj);
+                
+                if(notis.length === 0) {
+                    listEl.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:30px; color:#9ca3af; font-weight:600; background:#f9fafb; border-radius:16px; border:1px dashed #d1d5db;"><i class="fa-solid fa-mug-hot" style="font-size:2rem; margin-bottom:15px; display:block;"></i>คุณไม่มีแจ้งเตือนในขณะนี้ ยอดเยี่ยมมาก!</div>';
+                } else {
+                    let finalHtml = '';
+                    notis.slice(0, 6).forEach(n => finalHtml += n.html);
+                    listEl.innerHTML = finalHtml;
+                }
+
+            } catch (err) {
+                console.error("Notification Error:", err);
+                listEl.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:20px; color:var(--danger);">ไม่สามารถดึงข้อมูลแจ้งเตือนได้</div>';
+            }
+        }
+
+        window.onload = loadDashboardData;
     </script>
 </body>
 </html>

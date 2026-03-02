@@ -106,7 +106,7 @@
                 <div class="nav-user-id" id="nav_role_title">รหัส: <span id="nav_code">กำลังโหลด...</span></div>
                 <div class="nav-user-name" id="nav_fullname">กำลังโหลดข้อมูล...</div>
             </div>
-            <i class="fa-solid fa-circle-user" id="nav_profile_icon"></i>
+            <div style="width:40px; height:40px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-size:1.2rem; font-weight:800;" id="nav_initial">?</div>
         </div>
     </div>
 
@@ -178,6 +178,9 @@
             const user = JSON.parse(sessionStr);
             document.getElementById('nav_fullname').innerText = user.full_name; 
             document.getElementById('nav_code').innerText = user.teacher_code;
+            // ทำตัวย่อชื่อ
+            const initials = user.full_name.trim().charAt(0);
+            document.getElementById('nav_initial').innerText = initials;
             if (user.role === 'admin') {
                 document.getElementById('nav_user_box').classList.add('admin-theme');
                 document.getElementById('nav_profile_icon').className = 'fa-solid fa-shield-halved';
